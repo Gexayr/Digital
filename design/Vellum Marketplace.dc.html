@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet data-dc-atomics>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0;-webkit-font-smoothing:antialiased}
+    * { box-sizing:border-box }
+    ::selection{background:#8b6bd6;color:#fff}
+    input,select,textarea{font-family:inherit}
+    input::placeholder{color:inherit;opacity:.45}
+  </style>
+  <script src="./image-slot.js"></script>
+</helmet>
+
+<div style="min-height:100vh;background:{{ T.bg }};color:{{ T.text }};font-family:{{ T.uiFont }};transition:background .3s ease,color .3s ease">
+
+  <!-- NAV -->
+  <div style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:28px;padding:16px 40px;background:{{ T.navBg }};backdrop-filter:blur(14px);border-bottom:1px solid {{ T.border }}">
+    <div onClick="{{ goHome }}" style="font:700 20px {{ T.displayFont }};letter-spacing:-.02em;cursor:pointer;color:{{ T.text }}">Vellum</div>
+    <div style="display:flex;align-items:center;gap:22px;font:500 14px {{ T.uiFont }};color:{{ T.textDim }}">
+      <span onClick="{{ goHome }}" style="cursor:pointer;color:{{ navColor.home }}">Home</span>
+      <span onClick="{{ goShop }}" style="cursor:pointer;color:{{ navColor.shop }}">Shop</span>
+      <span onClick="{{ goShop }}" style="cursor:pointer">Categories</span>
+      <span style="cursor:pointer">Creators</span>
+    </div>
+    <div style="flex:1"></div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <button onClick="{{ toggleDark }}" style="width:44px;height:26px;border:none;border-radius:999px;background:{{ T.toggleTrack }};position:relative;cursor:pointer;padding:0" aria-label="Toggle theme">
+        <div style="position:absolute;top:2px;left:{{ toggleLeft }};width:22px;height:22px;border-radius:999px;background:{{ T.accent }};transition:left .25s ease;display:flex;align-items:center;justify-content:center;font-size:11px">{{ toggleIcon }}</div>
+      </button>
+      <div style="position:relative;cursor:pointer" onClick="{{ goWishlist }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ T.text }}" stroke-width="1.8"><path d="M12 21s-7.5-4.6-10-9.3C.5 8.4 2 4.8 5.6 4c2.1-.5 4.2.4 5.4 2.2C12.2 4.4 14.3 3.5 16.4 4c3.6.8 5.1 4.4 3.6 7.7C19.5 16.4 12 21 12 21z"/></svg>
+        <sc-if value="{{ wishlist.length }}"><div style="position:absolute;top:-8px;right:-9px;min-width:16px;height:16px;padding:0 3px;border-radius:999px;background:{{ T.accent }};color:{{ T.accentText }};font:600 10px {{ T.uiFont }};display:flex;align-items:center;justify-content:center">{{ wishlist.length }}</div></sc-if>
+      </div>
+      <div style="position:relative;cursor:pointer" onClick="{{ goCart }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ T.text }}" stroke-width="1.8"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+        <sc-if value="{{ cartCount }}"><div style="position:absolute;top:-8px;right:-9px;min-width:16px;height:16px;padding:0 3px;border-radius:999px;background:{{ T.accent }};color:{{ T.accentText }};font:600 10px {{ T.uiFont }};display:flex;align-items:center;justify-content:center">{{ cartCount }}</div></sc-if>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <!-- HERO -->
+      <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;padding:88px 40px 96px;max-width:1360px;margin:0 auto">
+        <div style="display:flex;flex-direction:column;gap:22px">
+          <div style="font:500 13px {{ T.uiFont }};color:{{ T.accent }};letter-spacing:.06em;text-transform:uppercase">Digital goods, made by independent creators</div>
+          <div style="font:600 56px/1.05 {{ T.displayFont }};letter-spacing:-.02em;color:{{ T.text }}">A marketplace<br>for beautifully<br>made things.</div>
+          <div style="font:400 17px/1.6 {{ T.uiFont }};color:{{ T.textDim }};max-width:480px">Presets, UI kits, fonts, 3D assets and more — every file reviewed, every creator paid directly.</div>
+          <div style="display:flex;gap:14px;margin-top:8px">
+            <button onClick="{{ goShop }}" style="padding:14px 26px;border:none;border-radius:12px;background:{{ T.accent }};color:{{ T.accentText }};font:600 15px {{ T.uiFont }};cursor:pointer">Explore marketplace</button>
+            <button onClick="{{ goShop }}" style="padding:14px 26px;border:1px solid {{ T.border }};border-radius:12px;background:transparent;color:{{ T.text }};font:600 15px {{ T.uiFont }};cursor:pointer">Browse categories</button>
+          </div>
+          <div style="display:flex;gap:28px;margin-top:20px">
+            <sc-for list="{{ heroStats }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font:700 22px {{ T.displayFont }};color:{{ T.text }}">{{ s.value }}</div>
+                <div style="font:500 12px {{ T.uiFont }};color:{{ T.textDim }}">{{ s.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="position:relative;height:460px;border-radius:24px;overflow:hidden;box-shadow:0 40px 80px -30px rgba(0,0,0,.4)">
+          <image-slot id="hero-img" shape="rect" placeholder="Hero showcase image"></image-slot>
+        </div>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div style="padding:0 40px 80px;max-width:1360px;margin:0 auto">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px">
+          <div style="font:600 26px {{ T.displayFont }};color:{{ T.text }}">Browse by category</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+          <sc-for list="{{ categoriesList }}" as="c" hint-placeholder-count="8">
+            <div onClick="{{ c.onClick }}" style="display:flex;flex-direction:column;gap:14px;padding:22px;border-radius:16px;background:{{ T.surface }};border:1px solid {{ T.border }};cursor:pointer" style-hover="border-color:{{ T.accent }}">
+              <div style="width:38px;height:38px;border-radius:10px;background:{{ T.accentSoftBg }};color:{{ T.accent }};display:flex;align-items:center;justify-content:center;font:700 14px {{ T.displayFont }}">{{ c.initial }}</div>
+              <div style="font:600 14.5px {{ T.uiFont }};color:{{ T.text }}">{{ c.name }}</div>
+              <div style="font:400 12px {{ T.uiFont }};color:{{ T.textDim }}">{{ c.count }} products</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- FEATURED -->
+      <div style="padding:0 40px 80px;max-width:1360px;margin:0 auto">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px">
+          <div style="font:600 26px {{ T.displayFont }};color:{{ T.text }}">Featured products</div>
+          <span onClick="{{ goShop }}" style="font:500 13.5px {{ T.uiFont }};color:{{ T.accent }};cursor:pointer">View all →</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+          <sc-for list="{{ featuredProducts }}" as="p" hint-placeholder-count="4">
+            <dc-import name="Product Card" hint-size="100%,380px" product="{{ p }}" card="{{ T }}" wishlisted="{{ isWishlisted(p.id) }}" onAddCart="{{ addToCart }}" onToggleWishlist="{{ toggleWishlist }}" onView="{{ selectProduct }}"></dc-import>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- TRENDING -->
+      <div style="padding:0 40px 80px;max-width:1360px;margin:0 auto">
+        <div style="font:600 26px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px">Trending this week</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+          <sc-for list="{{ trendingProducts }}" as="p" hint-placeholder-count="4">
+            <dc-import name="Product Card" hint-size="100%,380px" product="{{ p }}" card="{{ T }}" wishlisted="{{ isWishlisted(p.id) }}" onAddCart="{{ addToCart }}" onToggleWishlist="{{ toggleWishlist }}" onView="{{ selectProduct }}"></dc-import>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- LATEST -->
+      <div style="padding:0 40px 88px;max-width:1360px;margin:0 auto">
+        <div style="font:600 26px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px">Latest uploads</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+          <sc-for list="{{ latestProducts }}" as="p" hint-placeholder-count="4">
+            <dc-import name="Product Card" hint-size="100%,380px" product="{{ p }}" card="{{ T }}" wishlisted="{{ isWishlisted(p.id) }}" onAddCart="{{ addToCart }}" onToggleWishlist="{{ toggleWishlist }}" onView="{{ selectProduct }}"></dc-import>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- CREATORS -->
+      <div style="padding:0 40px 88px;max-width:1360px;margin:0 auto">
+        <div style="font:600 26px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px">Popular creators</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+          <sc-for list="{{ creators }}" as="c" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:26px 18px;border-radius:16px;background:{{ T.surface }};border:1px solid {{ T.border }}">
+              <div style="width:64px;height:64px"><image-slot id="{{ c.slug }}" shape="circle" placeholder="{{ c.initial }}"></image-slot></div>
+              <div style="font:600 15px {{ T.displayFont }};color:{{ T.text }}">{{ c.name }}</div>
+              <div style="font:400 12.5px {{ T.uiFont }};color:{{ T.textDim }}">{{ c.count }} products · {{ c.rating }}★</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- TESTIMONIALS -->
+      <div style="padding:0 40px 88px;max-width:1360px;margin:0 auto">
+        <div style="font:600 26px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px">What customers say</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+          <sc-for list="{{ testimonials }}" as="t" hint-placeholder-count="3">
+            <div style="padding:26px;border-radius:16px;background:{{ T.surface }};border:1px solid {{ T.border }};display:flex;flex-direction:column;gap:14px">
+              <div style="font:400 15px/1.6 {{ T.uiFont }};color:{{ T.text }}">"{{ t.quote }}"</div>
+              <div style="font:600 13px {{ T.uiFont }};color:{{ T.textDim }}">{{ t.name }} · {{ t.role }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div style="padding:56px 40px;background:{{ T.surfaceAlt }};border-top:1px solid {{ T.border }};border-bottom:1px solid {{ T.border }}">
+        <div style="max-width:1360px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center">
+          <sc-for list="{{ globalStats }}" as="s" hint-placeholder-count="4">
+            <div>
+              <div style="font:700 34px {{ T.displayFont }};color:{{ T.text }}">{{ s.value }}</div>
+              <div style="font:500 13px {{ T.uiFont }};color:{{ T.textDim }};margin-top:4px">{{ s.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- NEWSLETTER -->
+      <div style="padding:80px 40px;max-width:760px;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px">
+        <div style="font:600 28px {{ T.displayFont }};color:{{ T.text }}">Get new drops in your inbox</div>
+        <div style="font:400 15px {{ T.uiFont }};color:{{ T.textDim }}">One email a week. New creators, new products, occasional discounts.</div>
+        <div style="display:flex;gap:10px;width:100%;max-width:420px;margin-top:6px">
+          <input placeholder="you@email.com" style="flex:1;padding:13px 16px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:400 14px {{ T.uiFont }}"/>
+          <button style="padding:13px 20px;border:none;border-radius:10px;background:{{ T.accent }};color:{{ T.accentText }};font:600 14px {{ T.uiFont }};cursor:pointer">Subscribe</button>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div style="padding:0 40px 88px;max-width:820px;margin:0 auto">
+        <div style="font:600 26px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px;text-align:center">Frequently asked questions</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ faqList }}" as="f" hint-placeholder-count="4">
+            <div style="border:1px solid {{ T.border }};border-radius:14px;background:{{ T.surface }};overflow:hidden">
+              <div onClick="{{ f.toggle }}" style="padding:18px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font:600 14.5px {{ T.uiFont }};color:{{ T.text }}">
+                {{ f.q }}
+                <span style="font:400 18px {{ T.uiFont }};color:{{ T.textDim }}">{{ f.sign }}</span>
+              </div>
+              <sc-if value="{{ f.open }}">
+                <div style="padding:0 20px 18px;font:400 14px/1.6 {{ T.uiFont }};color:{{ T.textDim }}">{{ f.a }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- SHOP -->
+  <sc-if value="{{ isShop }}">
+    <div style="max-width:1360px;margin:0 auto;padding:40px">
+      <div style="font:600 32px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px">Shop all products</div>
+      <div style="display:grid;grid-template-columns:240px 1fr;gap:32px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:24px;position:sticky;top:88px">
+          <div>
+            <div style="font:600 12px {{ T.uiFont }};color:{{ T.textDim }};text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Search</div>
+            <input value="{{ shopFilters.search }}" onChange="{{ onSearchChange }}" placeholder="Search products…" style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:400 13.5px {{ T.uiFont }}"/>
+          </div>
+          <div>
+            <div style="font:600 12px {{ T.uiFont }};color:{{ T.textDim }};text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Category</div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ categoryFilterList }}" as="c" hint-placeholder-count="9">
+                <div onClick="{{ c.onClick }}" style="padding:8px 10px;border-radius:8px;cursor:pointer;font:500 13.5px {{ T.uiFont }};color:{{ c.active }};background:{{ c.bg }}">{{ c.name }}</div>
+              </sc-for>
+            </div>
+          </div>
+          <div>
+            <div style="font:600 12px {{ T.uiFont }};color:{{ T.textDim }};text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Max price: {{ shopFilters.maxPrice }}</div>
+            <input type="range" min="10" max="80" value="{{ shopFilters.maxPrice }}" onChange="{{ onPriceChange }}" style="width:100%;accent-color:{{ T.accent }}"/>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+            <div style="font:400 13.5px {{ T.uiFont }};color:{{ T.textDim }}">{{ filteredProducts.length }} products</div>
+            <select value="{{ shopFilters.sort }}" onChange="{{ onSortChange }}" style="padding:9px 12px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:500 13px {{ T.uiFont }}">
+              <option value="Featured">Featured</option>
+              <option value="Newest">Newest</option>
+              <option value="PriceLow">Price: Low to high</option>
+              <option value="PriceHigh">Price: High to low</option>
+              <option value="Rating">Highest rated</option>
+              <option value="BestSelling">Best selling</option>
+            </select>
+          </div>
+          <sc-if value="{{ filteredProducts.length }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+              <sc-for list="{{ filteredProducts }}" as="p" hint-placeholder-count="6">
+                <dc-import name="Product Card" hint-size="100%,380px" product="{{ p }}" card="{{ T }}" wishlisted="{{ isWishlisted(p.id) }}" onAddCart="{{ addToCart }}" onToggleWishlist="{{ toggleWishlist }}" onView="{{ selectProduct }}"></dc-import>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noResults }}">
+            <div style="padding:60px 20px;text-align:center;color:{{ T.textDim }};font:400 15px {{ T.uiFont }}">No products match your filters.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- PRODUCT DETAIL -->
+  <sc-if value="{{ isProduct }}">
+    <div style="max-width:1200px;margin:0 auto;padding:32px 40px 88px">
+      <div onClick="{{ goShop }}" style="font:500 13.5px {{ T.uiFont }};color:{{ T.textDim }};cursor:pointer;margin-bottom:20px">← Back to shop</div>
+      <div style="display:grid;grid-template-columns:1fr 420px;gap:48px">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="border-radius:18px;overflow:hidden;aspect-ratio:4/3">
+            <image-slot id="{{ galleryMainId }}" shape="rect" placeholder="Product preview"></image-slot>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+            <sc-for list="{{ galleryThumbIds }}" as="g" hint-placeholder-count="4">
+              <div onClick="{{ g.onClick }}" style="border-radius:10px;overflow:hidden;aspect-ratio:1;outline:2px solid {{ g.outline }}">
+                <image-slot id="{{ g.id }}" shape="rect" placeholder="View"></image-slot>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="font:500 12.5px {{ T.uiFont }};color:{{ T.accent }};text-transform:uppercase;letter-spacing:.05em">{{ selectedProduct.category }}</div>
+          <div style="font:600 30px/1.2 {{ T.displayFont }};color:{{ T.text }}">{{ selectedProduct.title }}</div>
+          <div style="font:400 14px {{ T.uiFont }};color:{{ T.textDim }}">by <span style="color:{{ T.text }};font-weight:600">{{ selectedProduct.creator }}</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font:500 13.5px {{ T.uiFont }};color:{{ T.textDim }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="{{ T.accentSoft }}"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.9 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>
+            {{ selectedProduct.rating }} rating · {{ selectedProductSalesLabel }}
+          </div>
+          <div style="display:flex;align-items:baseline;gap:10px;padding-top:8px">
+            <span style="font:700 30px {{ T.displayFont }};color:{{ T.text }}">{{ selectedProductPrice }}</span>
+            <sc-if value="{{ selectedProduct.sale }}"><span style="font:500 16px {{ T.uiFont }};color:{{ T.textDim }};text-decoration:line-through">{{ selectedProductStrike }}</span></sc-if>
+          </div>
+          <div style="font:400 14.5px/1.6 {{ T.uiFont }};color:{{ T.textDim }}">Instant digital delivery after purchase. Includes lifetime updates on this version line and a {{ selectedProduct.license }} license.</div>
+          <div style="display:flex;gap:10px;margin-top:6px">
+            <button onClick="{{ buyNow }}" style="flex:1;padding:15px;border:none;border-radius:12px;background:{{ T.accent }};color:{{ T.accentText }};font:600 15px {{ T.uiFont }};cursor:pointer">Buy Now</button>
+            <button onClick="{{ addSelectedToCart }}" style="flex:1;padding:15px;border:1px solid {{ T.border }};border-radius:12px;background:transparent;color:{{ T.text }};font:600 15px {{ T.uiFont }};cursor:pointer">Add to Cart</button>
+          </div>
+          <div style="display:flex;gap:18px;margin-top:2px">
+            <span onClick="{{ toggleSelectedWishlist }}" style="font:500 13px {{ T.uiFont }};color:{{ T.textDim }};cursor:pointer">{{ selectedWishlistLabel }}</span>
+            <span style="font:500 13px {{ T.uiFont }};color:{{ T.textDim }};cursor:pointer">Share</span>
+          </div>
+          <div style="border-top:1px solid {{ T.border }};margin-top:8px;padding-top:16px;display:flex;flex-direction:column;gap:8px;font:400 13.5px {{ T.uiFont }};color:{{ T.textDim }}">
+            <div style="display:flex;justify-content:space-between"><span>File format</span><span style="color:{{ T.text }}">{{ selectedProduct.format }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span>File size</span><span style="color:{{ T.text }}">{{ selectedProduct.size }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span>Compatible with</span><span style="color:{{ T.text }}">{{ selectedProduct.software }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span>Last updated</span><span style="color:{{ T.text }}">{{ selectedProduct.updated }}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:56px">
+        <div style="display:flex;gap:28px;border-bottom:1px solid {{ T.border }}">
+          <sc-for list="{{ productTabs }}" as="tb" hint-placeholder-count="4">
+            <div onClick="{{ tb.onClick }}" style="padding:12px 2px;font:600 14px {{ T.uiFont }};color:{{ tb.color }};border-bottom:2px solid {{ tb.border }};cursor:pointer">{{ tb.label }}</div>
+          </sc-for>
+        </div>
+        <div style="padding:28px 2px;font:400 15px/1.7 {{ T.uiFont }};color:{{ T.textDim }};max-width:760px">
+          <sc-if value="{{ tabIsDescription }}">A carefully crafted {{ selectedProduct.category }} asset built for working creative professionals. Every file is tested across the listed software before release, and updated whenever the underlying tools change. {{ selectedProduct.creator }} has been publishing on Vellum since 2023.</sc-if>
+          <sc-if value="{{ tabIsFeatures }}">
+            <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px">
+              <li>Non-destructive, fully editable source files</li>
+              <li>Organized layers and naming conventions</li>
+              <li>Free updates for the current major version</li>
+              <li>Commercial-use documentation included</li>
+            </ul>
+          </sc-if>
+          <sc-if value="{{ tabIsFiles }}">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div>Format: {{ selectedProduct.format }}</div>
+              <div>Size: {{ selectedProduct.size }}</div>
+              <div>License: {{ selectedProduct.license }}</div>
+              <div>Compatible software: {{ selectedProduct.software }}</div>
+              <div>Version history: v2.1 — {{ selectedProduct.updated }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ tabIsReviews }}">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <sc-for list="{{ sampleReviews }}" as="r" hint-placeholder-count="2">
+                <div style="border-bottom:1px solid {{ T.border }};padding-bottom:16px">
+                  <div style="font:600 13.5px {{ T.uiFont }};color:{{ T.text }}">{{ r.name }} — {{ r.stars }}</div>
+                  <div style="margin-top:4px">{{ r.text }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="margin-top:32px">
+        <div style="font:600 22px {{ T.displayFont }};color:{{ T.text }};margin-bottom:20px">Related products</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+          <sc-for list="{{ relatedProducts }}" as="p" hint-placeholder-count="4">
+            <dc-import name="Product Card" hint-size="100%,380px" product="{{ p }}" card="{{ T }}" wishlisted="{{ isWishlisted(p.id) }}" onAddCart="{{ addToCart }}" onToggleWishlist="{{ toggleWishlist }}" onView="{{ selectProduct }}"></dc-import>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- WISHLIST -->
+  <sc-if value="{{ isWishlistView }}">
+    <div style="max-width:1200px;margin:0 auto;padding:40px">
+      <div style="font:600 30px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px">Wishlist</div>
+      <sc-if value="{{ wishlistProducts.length }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+          <sc-for list="{{ wishlistProducts }}" as="p" hint-placeholder-count="4">
+            <dc-import name="Product Card" hint-size="100%,380px" product="{{ p }}" card="{{ T }}" wishlisted="{{ true }}" onAddCart="{{ addToCart }}" onToggleWishlist="{{ toggleWishlist }}" onView="{{ selectProduct }}"></dc-import>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ wishlistEmpty }}">
+        <div style="padding:60px 0;text-align:center;color:{{ T.textDim }};font:400 15px {{ T.uiFont }}">Nothing saved yet. <span onClick="{{ goShop }}" style="color:{{ T.accent }};cursor:pointer">Browse the shop →</span></div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- CART -->
+  <sc-if value="{{ isCart }}">
+    <div style="max-width:1100px;margin:0 auto;padding:40px">
+      <div style="font:600 30px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px">Shopping cart</div>
+      <sc-if value="{{ cartEmpty }}">
+        <div style="padding:60px 0;text-align:center;color:{{ T.textDim }};font:400 15px {{ T.uiFont }}">Your cart is empty. <span onClick="{{ goShop }}" style="color:{{ T.accent }};cursor:pointer">Browse the shop →</span></div>
+      </sc-if>
+      <sc-if value="{{ cartCount }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:40px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ cartItems }}" as="it" hint-placeholder-count="2">
+              <div style="display:flex;gap:16px;align-items:center;padding:14px;border:1px solid {{ T.border }};border-radius:14px;background:{{ T.surface }}">
+                <div style="width:76px;height:60px;border-radius:8px;overflow:hidden;flex:none"><image-slot id="{{ it.img }}" shape="rect"></image-slot></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                  <div style="font:600 14.5px {{ T.uiFont }};color:{{ T.text }}">{{ it.title }}</div>
+                  <div style="font:400 12.5px {{ T.uiFont }};color:{{ T.textDim }}">{{ it.license }} license</div>
+                </div>
+                <div style="font:600 15px {{ T.displayFont }};color:{{ T.text }}">{{ it.priceLabel }}</div>
+                <span onClick="{{ it.onRemove }}" style="font:500 13px {{ T.uiFont }};color:{{ T.textDim }};cursor:pointer">Remove</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="border:1px solid {{ T.border }};border-radius:16px;padding:24px;background:{{ T.surface }};display:flex;flex-direction:column;gap:14px">
+            <div style="font:600 16px {{ T.displayFont }};color:{{ T.text }}">Order summary</div>
+            <input placeholder="Coupon code" style="padding:11px 14px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.bg }};color:{{ T.text }};font:400 13.5px {{ T.uiFont }}"/>
+            <div style="display:flex;flex-direction:column;gap:8px;font:400 13.5px {{ T.uiFont }};color:{{ T.textDim }}">
+              <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span style="color:{{ T.text }}">{{ cartSubtotalLabel }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Tax</span><span style="color:{{ T.text }}">{{ cartTaxLabel }}</span></div>
+              <div style="display:flex;justify-content:space-between;font:700 16px {{ T.displayFont }};color:{{ T.text }};padding-top:8px;border-top:1px solid {{ T.border }}"><span>Total</span><span>{{ cartTotalLabel }}</span></div>
+            </div>
+            <button onClick="{{ goCheckout }}" style="padding:14px;border:none;border-radius:12px;background:{{ T.accent }};color:{{ T.accentText }};font:600 15px {{ T.uiFont }};cursor:pointer;margin-top:6px">Checkout</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- CHECKOUT -->
+  <sc-if value="{{ isCheckout }}">
+    <div style="max-width:1100px;margin:0 auto;padding:40px">
+      <div style="font:600 30px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px">Checkout</div>
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:40px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:28px">
+          <div>
+            <div style="font:600 15px {{ T.displayFont }};color:{{ T.text }};margin-bottom:12px">Customer information</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <input value="{{ checkout.name }}" onChange="{{ onCheckoutChange('name') }}" placeholder="Full name" style="grid-column:span 2;padding:12px 14px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:400 13.5px {{ T.uiFont }}"/>
+              <input value="{{ checkout.email }}" onChange="{{ onCheckoutChange('email') }}" placeholder="Email" style="grid-column:span 2;padding:12px 14px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:400 13.5px {{ T.uiFont }}"/>
+              <input value="{{ checkout.country }}" onChange="{{ onCheckoutChange('country') }}" placeholder="Country" style="padding:12px 14px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:400 13.5px {{ T.uiFont }}"/>
+              <input value="{{ checkout.address }}" onChange="{{ onCheckoutChange('address') }}" placeholder="Billing address" style="padding:12px 14px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:400 13.5px {{ T.uiFont }}"/>
+            </div>
+          </div>
+          <div>
+            <div style="font:600 15px {{ T.displayFont }};color:{{ T.text }};margin-bottom:12px">Payment method</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+              <sc-for list="{{ paymentMethods }}" as="pm" hint-placeholder-count="4">
+                <div onClick="{{ pm.onClick }}" style="padding:14px 10px;text-align:center;border-radius:10px;border:1.5px solid {{ pm.border }};background:{{ pm.bg }};font:600 12.5px {{ T.uiFont }};color:{{ T.text }};cursor:pointer">{{ pm.label }}</div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ paymentIsCard }}">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px">
+                <input placeholder="Card number" style="grid-column:span 3;padding:12px 14px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:400 13.5px {{ T.uiFont }}"/>
+                <input placeholder="MM/YY" style="padding:12px 14px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:400 13.5px {{ T.uiFont }}"/>
+                <input placeholder="CVV" style="padding:12px 14px;border-radius:10px;border:1px solid {{ T.border }};background:{{ T.surface }};color:{{ T.text }};font:400 13.5px {{ T.uiFont }}"/>
+              </div>
+            </sc-if>
+          </div>
+          <label style="display:flex;align-items:center;gap:10px;font:400 13.5px {{ T.uiFont }};color:{{ T.textDim }};cursor:pointer">
+            <input type="checkbox" checked="{{ checkout.terms }}" onChange="{{ onTermsChange }}"/> I accept the Terms of Service and Privacy Policy
+          </label>
+        </div>
+        <div style="border:1px solid {{ T.border }};border-radius:16px;padding:24px;background:{{ T.surface }};display:flex;flex-direction:column;gap:14px">
+          <div style="font:600 16px {{ T.displayFont }};color:{{ T.text }}">Order summary</div>
+          <sc-for list="{{ cartItems }}" as="it" hint-placeholder-count="2">
+            <div style="display:flex;justify-content:space-between;font:400 13.5px {{ T.uiFont }};color:{{ T.textDim }}"><span>{{ it.title }}</span><span style="color:{{ T.text }}">{{ it.priceLabel }}</span></div>
+          </sc-for>
+          <div style="display:flex;justify-content:space-between;font:700 16px {{ T.displayFont }};color:{{ T.text }};padding-top:10px;border-top:1px solid {{ T.border }}"><span>Total</span><span>{{ cartTotalLabel }}</span></div>
+          <button onClick="{{ payNow }}" disabled="{{ payDisabled }}" style="padding:14px;border:none;border-radius:12px;background:{{ T.accent }};color:{{ T.accentText }};font:600 15px {{ T.uiFont }};cursor:pointer;opacity:{{ payOpacity }}">Pay Securely</button>
+          <div onClick="{{ goShop }}" style="text-align:center;font:500 13px {{ T.uiFont }};color:{{ T.textDim }};cursor:pointer">Continue shopping</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- SUCCESS -->
+  <sc-if value="{{ isSuccess }}">
+    <div style="max-width:560px;margin:0 auto;padding:100px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px">
+      <div style="width:64px;height:64px;border-radius:999px;background:{{ T.accentSoftBg }};display:flex;align-items:center;justify-content:center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{ T.accent }}" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <div style="font:600 28px {{ T.displayFont }};color:{{ T.text }}">Order confirmed</div>
+      <div style="font:400 14.5px {{ T.uiFont }};color:{{ T.textDim }}">Order #{{ orderId }} · {{ orderDate }}</div>
+      <div style="font:400 14.5px/1.6 {{ T.uiFont }};color:{{ T.textDim }}">A confirmation email is on its way. Your files are ready in your downloads page.</div>
+      <button onClick="{{ goDownloads }}" style="padding:14px 26px;border:none;border-radius:12px;background:{{ T.accent }};color:{{ T.accentText }};font:600 15px {{ T.uiFont }};cursor:pointer;margin-top:8px">Go to downloads</button>
+      <span onClick="{{ goHome }}" style="font:500 13px {{ T.uiFont }};color:{{ T.textDim }};cursor:pointer">Continue shopping</span>
+    </div>
+  </sc-if>
+
+  <!-- DOWNLOADS -->
+  <sc-if value="{{ isDownloads }}">
+    <div style="max-width:900px;margin:0 auto;padding:40px">
+      <div style="font:600 30px {{ T.displayFont }};color:{{ T.text }};margin-bottom:24px">Your downloads</div>
+      <sc-if value="{{ purchased.length }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ purchased }}" as="it" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:16px;padding:14px;border:1px solid {{ T.border }};border-radius:14px;background:{{ T.surface }}">
+              <div style="width:64px;height:50px;border-radius:8px;overflow:hidden;flex:none"><image-slot id="{{ it.img }}" shape="rect"></image-slot></div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                <div style="font:600 14px {{ T.uiFont }};color:{{ T.text }}">{{ it.title }}</div>
+                <div style="font:400 12px {{ T.uiFont }};color:{{ T.textDim }}">{{ it.license }} license · v2.1</div>
+              </div>
+              <button style="padding:9px 16px;border:none;border-radius:9px;background:{{ T.accent }};color:{{ T.accentText }};font:600 13px {{ T.uiFont }};cursor:pointer">Download</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ purchasedEmpty }}">
+        <div style="padding:60px 0;text-align:center;color:{{ T.textDim }};font:400 15px {{ T.uiFont }}">No purchases yet.</div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- FOOTER -->
+  <sc-if value="{{ showFooter }}">
+    <div style="border-top:1px solid {{ T.border }};padding:56px 40px 32px">
+      <div style="max-width:1360px;margin:0 auto;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px">
+        <div>
+          <div style="font:700 20px {{ T.displayFont }};color:{{ T.text }};margin-bottom:10px">Vellum</div>
+          <div style="font:400 13.5px/1.6 {{ T.uiFont }};color:{{ T.textDim }};max-width:260px">A marketplace for premium digital assets, built for the people who make them.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font:400 13.5px {{ T.uiFont }};color:{{ T.textDim }}">
+          <div style="font:600 12px {{ T.uiFont }};color:{{ T.text }};margin-bottom:2px">Marketplace</div>
+          <span>Shop</span><span>Categories</span><span>Creators</span><span>Become a creator</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font:400 13.5px {{ T.uiFont }};color:{{ T.textDim }}">
+          <div style="font:600 12px {{ T.uiFont }};color:{{ T.text }};margin-bottom:2px">Company</div>
+          <span>About</span><span>Blog</span><span>Support</span><span>Contact</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font:400 13.5px {{ T.uiFont }};color:{{ T.textDim }}">
+          <div style="font:600 12px {{ T.uiFont }};color:{{ T.text }};margin-bottom:2px">Legal</div>
+          <span>Terms</span><span>Privacy</span><span>Licensing</span>
+        </div>
+      </div>
+      <div style="max-width:1360px;margin:32px auto 0;padding-top:20px;border-top:1px solid {{ T.border }};font:400 12.5px {{ T.uiFont }};color:{{ T.textDim }}">© 2026 Vellum. All rights reserved.</div>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const DARK = {
+  isDark:true, bg:'oklch(0.16 0.01 60)', surface:'oklch(0.22 0.014 60)', surfaceAlt:'oklch(0.20 0.012 60)',
+  border:'oklch(1 0 0 / 0.09)', text:'oklch(0.96 0.006 70)', textDim:'oklch(0.66 0.014 60)',
+  accent:'oklch(0.66 0.19 300)', accentText:'#fff', accentSoft:'oklch(0.78 0.15 85)', accentSoftBg:'oklch(0.66 0.19 300 / 0.16)',
+  navBg:'oklch(0.16 0.01 60 / 0.72)', toggleTrack:'oklch(0.3 0.015 60)',
+  displayFont:"'Bricolage Grotesque', sans-serif", uiFont:"'Geist', -apple-system, sans-serif"
+};
+const LIGHT = {
+  isDark:false, bg:'oklch(0.98 0.006 80)', surface:'oklch(1 0 0)', surfaceAlt:'oklch(0.965 0.006 80)',
+  border:'oklch(0.15 0.01 60 / 0.1)', text:'oklch(0.18 0.01 60)', textDim:'oklch(0.46 0.012 60)',
+  accent:'oklch(0.52 0.19 300)', accentText:'#fff', accentSoft:'oklch(0.62 0.16 70)', accentSoftBg:'oklch(0.52 0.19 300 / 0.1)',
+  navBg:'oklch(0.98 0.006 80 / 0.78)', toggleTrack:'oklch(0.85 0.01 60)',
+  displayFont:"'Bricolage Grotesque', sans-serif", uiFont:"'Geist', -apple-system, sans-serif"
+};
+
+const TESTIMONIALS = [
+  { name:'Priya Nair', role:'Freelance designer', quote:'Found presets and a UI kit in one afternoon that would\u2019ve taken me a week to build from scratch.' },
+  { name:'Owen Baxter', role:'Indie game dev', quote:'The 3D assets came properly organized and dropped straight into my Blender scene. No cleanup needed.' },
+  { name:'Sana Iqbal', role:'Content creator', quote:'Checkout took under a minute and the files were in my inbox before I\u2019d closed the tab.' },
+];
+
+const FAQ = [
+  { q:'How do I receive my files after purchase?', a:'Files unlock instantly on the order confirmation page and stay available in your Downloads dashboard, along with an email copy of your receipt and download links.' },
+  { q:'What license do I get with a purchase?', a:'Each product lists its license type (Personal, Standard, Extended or Commercial) on its product page — covering exactly what you can build or resell with the files.' },
+  { q:'Can I get a refund?', a:'Yes, within 14 days if the files are defective or materially different from the listing. Reach out through Support and we\u2019ll review your order.' },
+  { q:'Do creators get paid directly?', a:'Yes — creators keep the large majority of every sale, paid out automatically on a rolling schedule.' },
+];
+
+const REVIEWS = [
+  { name:'Jordan M.', stars:'★★★★★', text:'Exactly as described, files were clean and well organized.' },
+  { name:'Casey L.', stars:'★★★★☆', text:'Great quality, wish there were a couple more color variants.' },
+];
+
+let PRODUCTS = [], fmtPrice = (n)=>'$'+n;
+
+class Component extends DCLogic {
+  state = {
+    dark: true, view: 'home', cart: [], wishlist: [],
+    selectedId: null, galleryIndex: 0, activeTab: 'description',
+    faqOpen: null,
+    shopFilters: { search:'', category:'All', sort:'Featured', maxPrice:80 },
+    checkout: { name:'', email:'', country:'United States', address:'', payment:'card', terms:false },
+    orderId:null, orderDate:null, loaded:false,
+  };
+
+  async componentDidMount() {
+    const mod = await import('./products.js');
+    PRODUCTS = mod.PRODUCTS; fmtPrice = mod.fmtPrice;
+    this.CATEGORIES = mod.CATEGORIES;
+    this.forceUpdate();
+  }
+
+  nav(view) { this.setState({ view }); window.scrollTo?.(0,0); }
+  goHome = () => this.nav('home');
+  goShop = () => this.nav('shop');
+  goCart = () => this.nav('cart');
+  goWishlist = () => this.nav('wishlist');
+  goCheckout = () => this.nav('checkout');
+  goDownloads = () => this.nav('downloads');
+  toggleDark = () => this.setState(s => ({ dark: !s.dark }));
+
+  selectProduct = (p) => this.setState({ selectedId: p.id, view:'product', activeTab:'description', galleryIndex:0 });
+
+  addToCart = (p) => this.setState(s => s.cart.some(c=>c.id===p.id) ? s : { cart:[...s.cart, {id:p.id}] });
+  removeFromCart = (id) => this.setState(s => ({ cart: s.cart.filter(c=>c.id!==id) }));
+  toggleWishlist = (p) => this.setState(s => s.wishlist.includes(p.id) ? { wishlist:s.wishlist.filter(id=>id!==p.id) } : { wishlist:[...s.wishlist,p.id] });
+  isWishlisted = (id) => this.state.wishlist.includes(id);
+
+  onSearchChange = (e) => this.setState(s => ({ shopFilters:{...s.shopFilters, search:e.target.value} }));
+  onPriceChange = (e) => this.setState(s => ({ shopFilters:{...s.shopFilters, maxPrice:Number(e.target.value)} }));
+  onSortChange = (e) => this.setState(s => ({ shopFilters:{...s.shopFilters, sort:e.target.value} }));
+  setCategory = (cat) => this.setState(s => ({ shopFilters:{...s.shopFilters, category:cat} }));
+
+  onCheckoutChange = (field) => (e) => { const v = e.target.value; this.setState(s => ({ checkout:{...s.checkout, [field]:v} })); };
+  onTermsChange = (e) => this.setState(s => ({ checkout:{...s.checkout, terms:e.target.checked} }));
+  setPayment = (m) => this.setState(s => ({ checkout:{...s.checkout, payment:m} }));
+
+  payNow = () => {
+    if (!this.state.checkout.terms || this.state.cart.length===0) return;
+    const orderId = 'VL-' + Math.floor(100000 + Math.random()*900000);
+    this.setState({ orderId, orderDate: new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}), purchasedCart: this.state.cart, cart: [], view:'success' });
+  };
+
+  buyNow = () => { this.addToCart(this.getSelected()); this.goCheckout(); };
+  addSelectedToCart = () => this.addToCart(this.getSelected());
+  toggleSelectedWishlist = () => this.toggleWishlist(this.getSelected());
+  getSelected() { return PRODUCTS.find(p=>p.id===this.state.selectedId) || {}; }
+
+  setGallery = (i) => this.setState({ galleryIndex:i });
+  setTab = (t) => this.setState({ activeTab:t });
+  toggleFaq = (i) => this.setState(s => ({ faqOpen: s.faqOpen===i ? null : i }));
+
+  renderVals() {
+    const s = this.state;
+    const T = s.dark ? DARK : LIGHT;
+    const toggleLeft = s.dark ? '20px' : '2px';
+    const toggleIcon = s.dark ? '🌙' : '☀️';
+
+    if (!PRODUCTS.length) {
+      return { T, isHome:false, isShop:false, isProduct:false, isCart:false, isCheckout:false, isSuccess:false, isDownloads:false, isWishlistView:false, showFooter:false, toggleDark:this.toggleDark, toggleLeft, toggleIcon, goHome:this.goHome, goShop:this.goShop, goCart:this.goCart, goWishlist:this.goWishlist, navColor:{home:T.text,shop:T.textDim}, cartCount:0, wishlist:[] };
+    }
+
+    const categoriesCount = {};
+    PRODUCTS.forEach(p => categoriesCount[p.category] = (categoriesCount[p.category]||0)+1);
+    const categoriesList = this.CATEGORIES.map(name => ({ name, initial:name[0], count:categoriesCount[name]||0, onClick:()=>{ this.setCategory(name); this.goShop(); } }));
+
+    const featuredProducts = PRODUCTS.filter(p=>p.badge==='Featured').concat(PRODUCTS.slice(0,4)).slice(0,4);
+    const trendingProducts = PRODUCTS.filter(p=>p.badge==='Trending').slice(0,4);
+    const latestProducts = [...PRODUCTS].sort((a,b)=> b.updated.localeCompare(a.updated)).slice(0,4);
+
+    const creatorMap = {};
+    PRODUCTS.forEach(p => { if(!creatorMap[p.creator]) creatorMap[p.creator]={name:p.creator,count:0,sales:0,ratingSum:0}; const c=creatorMap[p.creator]; c.count++; c.sales+=p.sales; c.ratingSum+=p.rating; });
+    const creators = Object.values(creatorMap).map(c => ({ ...c, rating:(c.ratingSum/c.count).toFixed(1), initial:c.name[0], slug:'avatar-'+c.name.toLowerCase().replace(/[^a-z]+/g,'-') })).slice(0,4);
+
+    const heroStats = [ { value:'2.4K+', label:'Creators' }, { value:'38K+', label:'Products' }, { value:'1.2M', label:'Downloads' } ];
+    const globalStats = [ { value:'$4.2M', label:'Paid to creators' }, { value:'38,400', label:'Digital products' }, { value:'2,410', label:'Active creators' }, { value:'96%', label:'Would buy again' } ];
+
+    const faqList = FAQ.map((f,i) => ({ ...f, open: s.faqOpen===i, sign: s.faqOpen===i ? '−' : '+', toggle: ()=>this.toggleFaq(i) }));
+
+    let filteredProducts = PRODUCTS.filter(p => {
+      if (s.shopFilters.category!=='All' && p.category!==s.shopFilters.category) return false;
+      if (s.shopFilters.search && !(p.title+p.category+p.creator+p.tags.join(' ')).toLowerCase().includes(s.shopFilters.search.toLowerCase())) return false;
+      if ((p.sale ?? p.price) > s.shopFilters.maxPrice) return false;
+      return true;
+    });
+    const sortFns = {
+      Featured: (a,b)=> (b.badge==='Featured') - (a.badge==='Featured'),
+      Newest: (a,b)=> b.updated.localeCompare(a.updated),
+      PriceLow: (a,b)=> (a.sale??a.price)-(b.sale??b.price),
+      PriceHigh: (a,b)=> (b.sale??b.price)-(a.sale??a.price),
+      Rating: (a,b)=> b.rating-a.rating,
+      BestSelling: (a,b)=> b.sales-a.sales,
+    };
+    filteredProducts = filteredProducts.slice().sort(sortFns[s.shopFilters.sort]);
+    const categoryFilterList = ['All', ...this.CATEGORIES].map(name => ({
+      name, active: name===s.shopFilters.category ? T.accent : T.textDim, bg: name===s.shopFilters.category ? T.accentSoftBg : 'transparent', onClick:()=>this.setCategory(name)
+    }));
+
+    const selectedProduct = this.getSelected();
+    const galleryMainId = s.galleryIndex===0 ? selectedProduct.img : selectedProduct.img+'-alt-'+s.galleryIndex;
+    const galleryThumbIds = [0,1,2,3].map(i => ({ id: i===0?selectedProduct.img:selectedProduct.img+'-alt-'+i, onClick:()=>this.setGallery(i), outline: s.galleryIndex===i ? T.accent : 'transparent' }));
+    const relatedProducts = PRODUCTS.filter(p=>p.category===selectedProduct.category && p.id!==selectedProduct.id).slice(0,4);
+    const productTabs = ['description','features','files','reviews'].map(t => ({
+      key:t, label: t==='files' ? 'File Info' : t[0].toUpperCase()+t.slice(1), onClick:()=>this.setTab(t),
+      color: s.activeTab===t ? T.text : T.textDim, border: s.activeTab===t ? T.accent : 'transparent'
+    }));
+
+    const cartItems = s.cart.map(c => { const p = PRODUCTS.find(pp=>pp.id===c.id); return { ...p, priceLabel: fmtPrice(p.sale ?? p.price), onRemove:()=>this.removeFromCart(p.id) }; });
+    const cartSubtotal = cartItems.reduce((sum,it)=> sum + (it.sale ?? it.price), 0);
+    const cartTax = cartSubtotal * 0.0;
+    const wishlistProducts = s.wishlist.map(id => PRODUCTS.find(p=>p.id===id)).filter(Boolean);
+    const purchased = (s.purchasedCart||[]).map(c => PRODUCTS.find(p=>p.id===c.id)).filter(Boolean);
+
+    const paymentMethods = [
+      { key:'card', label:'Card' }, { key:'paypal', label:'PayPal' }, { key:'applepay', label:'Apple Pay' }, { key:'googlepay', label:'Google Pay' }
+    ].map(pm => ({ ...pm, onClick:()=>this.setPayment(pm.key), border: s.checkout.payment===pm.key ? T.accent : T.border, bg: s.checkout.payment===pm.key ? T.accentSoftBg : 'transparent' }));
+
+    return {
+      T, isHome: s.view==='home', isShop: s.view==='shop', isProduct: s.view==='product' && !!selectedProduct.id,
+      isCart: s.view==='cart', isCheckout: s.view==='checkout', isSuccess: s.view==='success', isDownloads: s.view==='downloads', isWishlistView: s.view==='wishlist',
+      showFooter: s.view!=='checkout' && s.view!=='success',
+      navColor: { home: s.view==='home'?T.text:T.textDim, shop: s.view==='shop'?T.text:T.textDim },
+      toggleDark:this.toggleDark, toggleLeft, toggleIcon,
+      goHome:this.goHome, goShop:this.goShop, goCart:this.goCart, goWishlist:this.goWishlist, goCheckout:this.goCheckout, goDownloads:this.goDownloads,
+      cartCount: s.cart.length, wishlist: s.wishlist,
+      heroStats, categoriesList, featuredProducts, trendingProducts, latestProducts, creators, testimonials:TESTIMONIALS, globalStats, faqList,
+      isWishlisted:this.isWishlisted, addToCart:this.addToCart, toggleWishlist:this.toggleWishlist, selectProduct:this.selectProduct,
+      shopFilters: s.shopFilters, onSearchChange:this.onSearchChange, onPriceChange:this.onPriceChange, onSortChange:this.onSortChange,
+      categoryFilterList, filteredProducts, noResults: filteredProducts.length===0,
+      selectedProduct, selectedProductSalesLabel: (selectedProduct.sales||0).toLocaleString()+' sales',
+      selectedProductPrice: fmtPrice(selectedProduct.sale ?? selectedProduct.price), selectedProductStrike: fmtPrice(selectedProduct.price),
+      galleryMainId, galleryThumbIds, relatedProducts, productTabs,
+      tabIsDescription: s.activeTab==='description', tabIsFeatures: s.activeTab==='features', tabIsFiles: s.activeTab==='files', tabIsReviews: s.activeTab==='reviews',
+      sampleReviews: REVIEWS, buyNow:this.buyNow, addSelectedToCart:this.addSelectedToCart, toggleSelectedWishlist:this.toggleSelectedWishlist,
+      selectedWishlistLabel: s.wishlist.includes(selectedProduct.id) ? '♥ In wishlist' : '♡ Add to wishlist',
+      wishlistProducts, wishlistEmpty: wishlistProducts.length===0,
+      cartItems, cartEmpty: cartItems.length===0, cartSubtotalLabel: fmtPrice(cartSubtotal), cartTaxLabel: fmtPrice(cartTax), cartTotalLabel: fmtPrice(cartSubtotal+cartTax),
+      checkout: s.checkout, onCheckoutChange:this.onCheckoutChange, onTermsChange:this.onTermsChange, paymentMethods, paymentIsCard: s.checkout.payment==='card',
+      payNow:this.payNow, payDisabled: !s.checkout.terms || cartItems.length===0, payOpacity: (!s.checkout.terms || cartItems.length===0) ? 0.5 : 1,
+      orderId: s.orderId, orderDate: s.orderDate, purchased, purchasedEmpty: purchased.length===0,
+    };
+  }
+}
+</script>
+</body>
+</html>
