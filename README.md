@@ -19,6 +19,8 @@ npm test               # API tests
 
 Requires Node **22.13+** (Node 24 recommended).
 
+> Full step-by-step server runbook: **[DEPLOY.md](DEPLOY.md)**
+
 ## Deploy with Docker
 
 ```bash
