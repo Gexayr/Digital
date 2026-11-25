@@ -1,0 +1,16 @@
+{
+  "name": "vellum-marketplace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vellum — digital marketplace (React + Express + SQLite)",
+  "scripts": {
+    "install:all": "npm ci --prefix server && npm ci --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "test": "npm test --prefix server",
+    "deploy:pm2": "npm run install:all && npm run build && pm2 startOrReload ecosystem.config.cjs --env production && pm2 save"
+  },
+  "engines": { "node": ">=22.13" }
+}

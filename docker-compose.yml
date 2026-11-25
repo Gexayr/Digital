@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    image: vellum-marketplace:latest
+    container_name: vellum
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+    volumes:
+      - vellum-data:/data   # SQLite DB + deliverable files (/data/files/<productId>.zip)
+
+volumes:
+  vellum-data:
