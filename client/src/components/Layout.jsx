@@ -10,6 +10,19 @@ const LINKS = [
   { to: '/creators', label: 'Creators' },
 ];
 
+export function Logo() {
+  return (
+    <>
+      <svg className="logo-mark" width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="16" y="4" width="28" height="28" rx="7" fill="currentColor" opacity=".35" />
+        <rect x="10" y="10" width="28" height="28" rx="7" fill="currentColor" opacity=".65" />
+        <rect x="4" y="16" width="28" height="28" rx="7" fill="currentColor" />
+      </svg>
+      <span>Vellum</span>
+    </>
+  );
+}
+
 function Nav() {
   const { cart, wishlist, theme, toggleTheme, orders } = useStore();
   const [open, setOpen] = useState(false);
@@ -28,7 +41,7 @@ function Nav() {
         <button type="button" className="icon-btn menu-btn" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open}>
           <Icon.menu />
         </button>
-        <Link to="/" className="logo">Vellum</Link>
+        <Link to="/" className="logo" aria-label="Vellum home"><Logo /></Link>
         <nav className="nav-links" aria-label="Main">
           {LINKS.map((l) => <NavLink key={l.to} to={l.to} end={l.end}>{l.label}</NavLink>)}
           {orders.length > 0 && <NavLink to="/downloads">Downloads</NavLink>}
@@ -52,7 +65,7 @@ function Nav() {
       <div className={'drawer-backdrop' + (open ? ' open' : '')} onClick={() => setOpen(false)} />
       <aside className={'drawer' + (open ? ' open' : '')} aria-hidden={!open} inert={open ? undefined : ''}>
         <div className="drawer-head">
-          <span className="logo">Vellum</span>
+          <span className="logo"><Logo /></span>
           <button type="button" className="icon-btn" onClick={() => setOpen(false)} aria-label="Close menu"><Icon.close /></button>
         </div>
         <nav className="drawer-links" aria-label="Mobile">
@@ -71,7 +84,7 @@ function Footer() {
     <footer className="footer">
       <div className="container footer-grid">
         <div>
-          <div className="logo">Vellum</div>
+          <div className="logo"><Logo /></div>
           <p className="muted footer-blurb">A marketplace for premium digital assets, built for the people who make them.</p>
         </div>
         <div className="footer-col">
