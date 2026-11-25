@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api, fmtPrice } from '../api.js';
 import { ProductGrid } from '../components/ProductCard.jsx';
-import { ErrorMsg, Icon, Loading, useFetch } from '../components/ui.jsx';
+import { ErrorMsg, Icon, Loading, useFetch, usePageMeta } from '../components/ui.jsx';
 
 const SORTS = [
   ['Featured', 'Featured'], ['Newest', 'Newest'], ['PriceLow', 'Price: Low to high'],
@@ -11,7 +11,7 @@ const SORTS = [
 const MAX_PRICE = 80;
 
 // Filters live in the URL, so they survive reloads, can be shared, and the
-// back button works — the prototype kept them in memory only.
+// back button works - the prototype kept them in memory only.
 export default function Shop() {
   const [params, setParams] = useSearchParams();
   const category = params.get('category') || 'All';
@@ -39,6 +39,7 @@ export default function Shop() {
     () => api.products({ category, sort, search, maxPrice: maxPrice < MAX_PRICE ? maxPrice : '' }),
     [category, sort, search, maxPrice],
   );
+  usePageMeta(category === 'All' ? 'Shop All Digital Products | Vellum' : `${category} - Buy and Download Digital ${category} | Vellum`);
   const activeCount = (category !== 'All') + (maxPrice < MAX_PRICE) + !!search;
 
   return (

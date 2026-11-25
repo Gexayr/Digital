@@ -426,3 +426,8 @@ main { flex: 1; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* Server-rendered fallback inside #root (server/src/seo.js); React replaces it on mount. */
+.seo-fallback { padding-top: 48px; color: var(--text-dim); }
+.seo-fallback h1 { color: var(--text); font: 600 32px/1.2 var(--display, inherit); margin: 0 0 12px; }
+.seo-fallback a { color: var(--text); }

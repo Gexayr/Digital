@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, fmtPrice, priceOf } from '../api.js';
 import { useStore } from '../store.jsx';
-import { Img } from '../components/ui.jsx';
+import { Img, usePageMeta } from '../components/ui.jsx';
 
 export function useTotals() {
   const { cart, coupon } = useStore();
@@ -53,6 +53,7 @@ export function Summary({ children, items, editable = false }) {
 }
 
 export default function Cart() {
+  usePageMeta('Shopping cart | Vellum');
   const { cart, removeFromCart } = useStore();
   const nav = useNavigate();
 

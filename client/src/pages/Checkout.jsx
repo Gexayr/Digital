@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, fmtPrice, priceOf } from '../api.js';
 import { useStore } from '../store.jsx';
 import { Summary } from './Cart.jsx';
+import { usePageMeta } from '../components/ui.jsx';
 
 const METHODS = [['card', 'Card'], ['paypal', 'PayPal'], ['applepay', 'Apple Pay'], ['googlepay', 'Google Pay']];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -15,13 +16,14 @@ function validate(f) {
     if (!/^\d{13,19}$/.test(f.cardNumber.replace(/\s+/g, ''))) e.cardNumber = 'Enter a valid card number.';
     const m = /^(\d{2})\s*\/\s*(\d{2})$/.exec(f.expiry);
     if (!m || +m[1] < 1 || +m[1] > 12) e.expiry = 'Use MM/YY.';
-    if (!/^\d{3,4}$/.test(f.cvv)) e.cvv = '3–4 digits.';
+    if (!/^\d{3,4}$/.test(f.cvv)) e.cvv = '3-4 digits.';
   }
   if (!f.terms) e.terms = 'You must accept the terms.';
   return e;
 }
 
 export default function Checkout() {
+  usePageMeta('Checkout | Vellum');
   const { cart, coupon, clearCart, addOrder } = useStore();
   const nav = useNavigate();
   const [f, setF] = useState({ name: '', email: '', country: 'United States', address: '', payment: 'card', cardNumber: '', expiry: '', cvv: '', terms: false });
@@ -42,7 +44,7 @@ export default function Checkout() {
     if (Object.keys(errs).length) return;
     setBusy(true);
     try {
-      // Card details never leave the browser — this is a demo checkout.
+      // Card details never leave the browser - this is a demo checkout.
       const order = await api.createOrder({
         items: cart.map((p) => p.id),
         customer: { name: f.name, email: f.email, country: f.country, address: f.address },
@@ -95,7 +97,7 @@ export default function Checkout() {
                 {field('cvv', 'CVV', { input: { inputMode: 'numeric', autoComplete: 'cc-csc', placeholder: '123' } })}
               </div>
             )}
-            <p className="muted small demo-note">Demo mode — no payment is processed and card details are not sent to the server.</p>
+            <p className="muted small demo-note">Demo mode - no payment is processed and card details are not sent to the server.</p>
           </fieldset>
           <div>
             <label className="check">

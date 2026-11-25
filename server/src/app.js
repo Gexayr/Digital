@@ -7,6 +7,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { rowToProduct } from './db.js';
 import { CATEGORIES } from './seed.js';
+import { createSeo } from './seo.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PAYMENTS = ['card', 'paypal', 'applepay', 'googlepay'];
@@ -21,7 +22,7 @@ const SORTS = {
 const round2 = (n) => Math.round(n * 100) / 100;
 const str = (v, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
-export function createApp({ db, clientDist, filesDir }) {
+export function createApp({ db, clientDist, filesDir, siteUrl }) {
   const app = express();
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
@@ -165,7 +166,7 @@ export function createApp({ db, clientDist, filesDir }) {
     const discount = coupon ? round2(subtotal * coupon.percent / 100) : 0;
     const total = round2(subtotal - discount);
 
-    // NOTE: demo checkout — no real charge happens. Plug a payment provider
+    // NOTE: demo checkout - no real charge happens. Plug a payment provider
     // (e.g. Stripe Checkout) in here before going live.
     let id;
     do { id = 'VL-' + randomInt(100000, 1000000); } while (q.order.get(id));
@@ -221,9 +222,17 @@ export function createApp({ db, clientDist, filesDir }) {
   app.use('/api', api);
 
   if (clientDist && existsSync(clientDist)) {
+    const seo = createSeo({ db, indexFile: path.join(clientDist, 'index.html'), siteUrl });
+    app.get('/robots.txt', (req, res) => res.type('text/plain').set('Cache-Control', 'public, max-age=3600').send(seo.robots(req)));
+    app.get('/sitemap.xml', (req, res) => res.type('application/xml').set('Cache-Control', 'public, max-age=3600').send(seo.sitemap(req)));
     app.use('/assets', express.static(path.join(clientDist, 'assets'), { immutable: true, maxAge: '1y' }));
     app.use(express.static(clientDist, { maxAge: '1h', index: false }));
-    app.get(/.*/, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+    // Every other route gets index.html with route-specific meta tags (see seo.js).
+    app.get(/.*/, (req, res) => {
+      const { status, html, noindex } = seo.render(req);
+      if (noindex) res.set('X-Robots-Tag', 'noindex, follow');
+      res.status(status).type('html').set('Cache-Control', 'no-cache').send(html);
+    });
   }
 
   // eslint-disable-next-line no-unused-vars

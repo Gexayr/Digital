@@ -2,10 +2,11 @@ import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useStore } from '../store.jsx';
 import { ProductGrid } from '../components/ProductCard.jsx';
-import { Avatar, ErrorMsg, Loading, useFetch } from '../components/ui.jsx';
+import { Avatar, ErrorMsg, Loading, useFetch, usePageMeta } from '../components/ui.jsx';
 import { CategoryGrid } from './Home.jsx';
 
 export function Wishlist() {
+  usePageMeta('Wishlist | Vellum');
   const { wishlist } = useStore();
   return (
     <div className="container page">
@@ -18,6 +19,7 @@ export function Wishlist() {
 }
 
 export function Categories() {
+  usePageMeta('Categories | Vellum');
   return (
     <div className="container page">
       <h1 className="h1">Categories</h1>
@@ -27,6 +29,7 @@ export function Categories() {
 }
 
 export function Creators() {
+  usePageMeta('Creators | Vellum');
   const { data, error, loading } = useFetch(api.creators, []);
   return (
     <div className="container page">
@@ -50,6 +53,7 @@ export function Creators() {
 }
 
 export function NotFound() {
+  usePageMeta('Page not found | Vellum');
   return (
     <div className="container page state-msg">
       <h1 className="h1">Page not found</h1>

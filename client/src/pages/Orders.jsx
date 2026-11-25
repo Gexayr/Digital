@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { api, fmtDate, fmtPrice } from '../api.js';
 import { useStore } from '../store.jsx';
-import { ErrorMsg, Icon, Img, Loading, useFetch } from '../components/ui.jsx';
+import { ErrorMsg, Icon, Img, Loading, useFetch, usePageMeta } from '../components/ui.jsx';
 
 export function OrderSuccess() {
+  usePageMeta('Order confirmed | Vellum');
   const { id } = useParams();
   const { state } = useLocation();
   const { orders } = useStore();
@@ -30,6 +31,7 @@ export function OrderSuccess() {
 }
 
 export function Downloads() {
+  usePageMeta('Your downloads | Vellum');
   const { orders } = useStore();
   const [state, setState] = useState({ loading: true, list: [] });
 

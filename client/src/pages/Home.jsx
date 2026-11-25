@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { ProductGrid } from '../components/ProductCard.jsx';
-import { Avatar, ErrorMsg, Img, Loading, useFetch } from '../components/ui.jsx';
+import { Avatar, ErrorMsg, Img, Loading, useFetch, usePageMeta } from '../components/ui.jsx';
 
 const TESTIMONIALS = [
   { name: 'Priya Nair', role: 'Freelance designer', quote: 'Found presets and a UI kit in one afternoon that would’ve taken me a week to build from scratch.' },
@@ -12,9 +12,9 @@ const TESTIMONIALS = [
 
 const FAQ = [
   { q: 'How do I receive my files after purchase?', a: 'Files unlock instantly on the order confirmation page and stay available in your Downloads page, along with an email copy of your receipt and download links.' },
-  { q: 'What license do I get with a purchase?', a: 'Each product lists its license type (Personal, Standard, Extended or Commercial) on its product page — covering exactly what you can build or resell with the files.' },
+  { q: 'What license do I get with a purchase?', a: 'Each product lists its license type (Personal, Standard, Extended or Commercial) on its product page - covering exactly what you can build or resell with the files.' },
   { q: 'Can I get a refund?', a: 'Yes, within 14 days if the files are defective or materially different from the listing. Reach out through Support and we’ll review your order.' },
-  { q: 'Do creators get paid directly?', a: 'Yes — creators keep the large majority of every sale, paid out automatically on a rolling schedule.' },
+  { q: 'Do creators get paid directly?', a: 'Yes - creators keep the large majority of every sale, paid out automatically on a rolling schedule.' },
 ];
 
 const HERO_STATS = [{ value: '2.4K+', label: 'Creators' }, { value: '38K+', label: 'Products' }, { value: '1.2M', label: 'Downloads' }];
@@ -45,7 +45,7 @@ function Newsletter() {
     setStatus({ kind: 'busy', msg: '' });
     try {
       await api.subscribe(email);
-      setStatus({ kind: 'ok', msg: 'You’re on the list — see you next week.' });
+      setStatus({ kind: 'ok', msg: 'You’re on the list - see you next week.' });
       setEmail('');
     } catch (err) {
       setStatus({ kind: 'err', msg: err.message });
@@ -86,6 +86,7 @@ function Faq() {
 
 export default function Home() {
   const { data, error, loading } = useFetch(api.home, []);
+  usePageMeta('Vellum - Presets, UI Kits, Fonts and 3D Assets from Independent Creators', 'Vellum is a marketplace for presets, UI kits, fonts, 3D assets, templates and audio from independent creators. Every file reviewed, every creator paid directly.');
 
   return (
     <>
@@ -93,7 +94,7 @@ export default function Home() {
         <div className="hero-copy">
           <div className="eyebrow">Digital goods, made by independent creators</div>
           <h1 className="hero-title">A marketplace for beautifully made things.</h1>
-          <p className="hero-sub">Presets, UI kits, fonts, 3D assets and more — every file reviewed, every creator paid directly.</p>
+          <p className="hero-sub">Presets, UI kits, fonts, 3D assets and more - every file reviewed, every creator paid directly.</p>
           <div className="hero-ctas">
             <Link to="/shop" className="btn btn-primary btn-lg">Explore marketplace</Link>
             <Link to="/categories" className="btn btn-ghost btn-lg">Browse categories</Link>

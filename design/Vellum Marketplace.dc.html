@@ -56,7 +56,7 @@
         <div style="display:flex;flex-direction:column;gap:22px">
           <div style="font:500 13px {{ T.uiFont }};color:{{ T.accent }};letter-spacing:.06em;text-transform:uppercase">Digital goods, made by independent creators</div>
           <div style="font:600 56px/1.05 {{ T.displayFont }};letter-spacing:-.02em;color:{{ T.text }}">A marketplace<br>for beautifully<br>made things.</div>
-          <div style="font:400 17px/1.6 {{ T.uiFont }};color:{{ T.textDim }};max-width:480px">Presets, UI kits, fonts, 3D assets and more — every file reviewed, every creator paid directly.</div>
+          <div style="font:400 17px/1.6 {{ T.uiFont }};color:{{ T.textDim }};max-width:480px">Presets, UI kits, fonts, 3D assets and more - every file reviewed, every creator paid directly.</div>
           <div style="display:flex;gap:14px;margin-top:8px">
             <button onClick="{{ goShop }}" style="padding:14px 26px;border:none;border-radius:12px;background:{{ T.accent }};color:{{ T.accentText }};font:600 15px {{ T.uiFont }};cursor:pointer">Explore marketplace</button>
             <button onClick="{{ goShop }}" style="padding:14px 26px;border:1px solid {{ T.border }};border-radius:12px;background:transparent;color:{{ T.text }};font:600 15px {{ T.uiFont }};cursor:pointer">Browse categories</button>
@@ -312,14 +312,14 @@
               <div>Size: {{ selectedProduct.size }}</div>
               <div>License: {{ selectedProduct.license }}</div>
               <div>Compatible software: {{ selectedProduct.software }}</div>
-              <div>Version history: v2.1 — {{ selectedProduct.updated }}</div>
+              <div>Version history: v2.1 - {{ selectedProduct.updated }}</div>
             </div>
           </sc-if>
           <sc-if value="{{ tabIsReviews }}">
             <div style="display:flex;flex-direction:column;gap:16px">
               <sc-for list="{{ sampleReviews }}" as="r" hint-placeholder-count="2">
                 <div style="border-bottom:1px solid {{ T.border }};padding-bottom:16px">
-                  <div style="font:600 13.5px {{ T.uiFont }};color:{{ T.text }}">{{ r.name }} — {{ r.stars }}</div>
+                  <div style="font:600 13.5px {{ T.uiFont }};color:{{ T.text }}">{{ r.name }} - {{ r.stars }}</div>
                   <div style="margin-top:4px">{{ r.text }}</div>
                 </div>
               </sc-for>
@@ -530,9 +530,9 @@ const TESTIMONIALS = [
 
 const FAQ = [
   { q:'How do I receive my files after purchase?', a:'Files unlock instantly on the order confirmation page and stay available in your Downloads dashboard, along with an email copy of your receipt and download links.' },
-  { q:'What license do I get with a purchase?', a:'Each product lists its license type (Personal, Standard, Extended or Commercial) on its product page — covering exactly what you can build or resell with the files.' },
+  { q:'What license do I get with a purchase?', a:'Each product lists its license type (Personal, Standard, Extended or Commercial) on its product page - covering exactly what you can build or resell with the files.' },
   { q:'Can I get a refund?', a:'Yes, within 14 days if the files are defective or materially different from the listing. Reach out through Support and we\u2019ll review your order.' },
-  { q:'Do creators get paid directly?', a:'Yes — creators keep the large majority of every sale, paid out automatically on a rolling schedule.' },
+  { q:'Do creators get paid directly?', a:'Yes - creators keep the large majority of every sale, paid out automatically on a rolling schedule.' },
 ];
 
 const REVIEWS = [

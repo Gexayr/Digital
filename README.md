@@ -1,4 +1,4 @@
-# Vellum — Digital Marketplace
+# Vellum - Digital Marketplace
 
 A marketplace for digital goods: presets, UI kits, fonts, 3D assets, templates and audio.
 
@@ -49,6 +49,7 @@ Data is stored in `./data/`. Put nginx in front with `deploy/nginx.conf` and add
 | `DATA_DIR` | `./data` | SQLite DB location |
 | `FILES_DIR` | `$DATA_DIR/files` | Real deliverables: `<productId>.zip` |
 | `CLIENT_DIST` | `client/dist` | Built frontend |
+| `SITE_URL` | request host | Public origin for canonical URLs, Open Graph and `sitemap.xml`, e.g. `https://vellum.amsoft.am` |
 
 ## API
 

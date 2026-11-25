@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
 
+// Keeps <title> and the meta description in sync during client-side navigation.
+// The server injects the same values on first load (server/src/seo.js).
+export function usePageMeta(title, description) {
+  useEffect(() => {
+    if (!title) return;
+    document.title = title;
+    if (description) document.querySelector('meta[name="description"]')?.setAttribute('content', description);
+  }, [title, description]);
+}
+
 export function useFetch(fn, deps) {
   const [state, setState] = useState({ data: null, error: null, loading: true });
   useEffect(() => {

@@ -161,6 +161,7 @@ Set environment variables in `ecosystem.config.cjs` (`env_production`) for PM2, 
 | `HOST` | `0.0.0.0` | Bind address |
 | `DATA_DIR` | `./data` (Docker: `/data`) | SQLite DB directory |
 | `FILES_DIR` | `$DATA_DIR/files` | Real product files, named `<productId>.zip` (e.g. `p1.zip`) |
+| `SITE_URL` | request host | Public origin for canonical URLs, Open Graph and `sitemap.xml` |
 
 There are no secrets or API keys to configure. Payments run in **demo mode**: nothing is charged.
 

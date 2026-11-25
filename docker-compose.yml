@@ -8,6 +8,7 @@ services:
       - "${PORT:-3000}:3000"
     environment:
       NODE_ENV: production
+      SITE_URL: ${SITE_URL:-}   # e.g. https://vellum.amsoft.am (canonical URLs, sitemap); defaults to the request host
     volumes:
       - vellum-data:/data   # SQLite DB + deliverable files (/data/files/<productId>.zip)
 

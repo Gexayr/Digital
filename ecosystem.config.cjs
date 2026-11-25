@@ -1,4 +1,4 @@
-// PM2 config — `npm run deploy:pm2` (installs, builds, starts/reloads).
+// PM2 config - `npm run deploy:pm2` (installs, builds, starts/reloads).
 // SQLite is single-writer, so run one instance (fork mode), not cluster.
 module.exports = {
   apps: [

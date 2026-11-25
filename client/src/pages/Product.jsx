@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, fmtDate, fmtPrice, priceOf } from '../api.js';
 import { useStore } from '../store.jsx';
 import { ProductGrid } from '../components/ProductCard.jsx';
-import { ErrorMsg, Icon, Img, Loading, Stars, useFetch } from '../components/ui.jsx';
+import { ErrorMsg, Icon, Img, Loading, Stars, useFetch, usePageMeta } from '../components/ui.jsx';
 
 const TABS = [['description', 'Description'], ['features', 'Features'], ['files', 'File Info'], ['reviews', 'Reviews']];
 
@@ -15,6 +15,10 @@ export default function Product() {
   const [gallery, setGallery] = useState(0);
   const [tab, setTab] = useState('description');
   useEffect(() => { setGallery(0); setTab('description'); }, [id]);
+  usePageMeta(
+    p ? `${p.title} by ${p.creator} | Vellum` : error ? 'Product not found | Vellum' : null,
+    p ? `${p.title} by ${p.creator}. ${p.category} for ${p.software}: ${p.format}, ${p.size}, ${p.license} license. Instant download on Vellum.` : undefined,
+  );
 
   if (loading) return <Loading />;
   if (error) {
@@ -40,7 +44,7 @@ export default function Product() {
       <button type="button" className="back-link" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/shop'))}>← Back</button>
       <div className="pdp">
         <div className="pdp-gallery">
-          <div className="pdp-main"><Img name={imgs[gallery]} alt={`${p.title} — preview ${gallery + 1}`} eager /></div>
+          <div className="pdp-main"><Img name={imgs[gallery]} alt={`${p.title} - preview ${gallery + 1}`} eager /></div>
           <div className="pdp-thumbs">
             {imgs.map((name, i) => (
               <button type="button" key={name} className={'thumb' + (gallery === i ? ' on' : '')} onClick={() => setGallery(i)} aria-label={`Show preview ${i + 1}`}>
@@ -103,7 +107,7 @@ export default function Product() {
         {tab === 'files' && (
           <div className="stack-sm">
             <div>Format: {p.format}</div><div>Size: {p.size}</div><div>License: {p.license}</div>
-            <div>Compatible software: {p.software}</div><div>Version history: v2.1 — {fmtDate(p.updated)}</div>
+            <div>Compatible software: {p.software}</div><div>Version history: v2.1 - {fmtDate(p.updated)}</div>
           </div>
         )}
         {tab === 'reviews' && (
@@ -111,7 +115,7 @@ export default function Product() {
             {avg && <div className="muted">Average {avg} from {p.reviews.length} reviews</div>}
             {p.reviews.map((r, i) => (
               <div className="review" key={i}>
-                <div className="strong">{r.name} — <Stars value={r.stars} /></div>
+                <div className="strong">{r.name} - <Stars value={r.stars} /></div>
                 <div>{r.text}</div>
               </div>
             ))}

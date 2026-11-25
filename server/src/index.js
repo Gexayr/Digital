@@ -11,7 +11,8 @@ const CLIENT_DIST = path.resolve(process.env.CLIENT_DIST || path.join(root, 'cli
 const FILES_DIR = path.resolve(process.env.FILES_DIR || path.join(DATA_DIR, 'files'));
 
 const db = openDb(path.join(DATA_DIR, 'vellum.db'));
-const app = createApp({ db, clientDist: CLIENT_DIST, filesDir: FILES_DIR });
+const SITE_URL = (process.env.SITE_URL || '').replace(/\/+$/, '');
+const app = createApp({ db, clientDist: CLIENT_DIST, filesDir: FILES_DIR, siteUrl: SITE_URL });
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`Vellum listening on http://${HOST}:${PORT}`);
