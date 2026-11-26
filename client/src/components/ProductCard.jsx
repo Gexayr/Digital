@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../store.jsx';
 import { fmtPrice, priceOf } from '../api.js';
 import { Icon, Img } from './ui.jsx';
+import { CardPlayButton } from './media.jsx';
 
 export default function ProductCard({ product: p }) {
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
@@ -23,6 +24,7 @@ export default function ProductCard({ product: p }) {
         >
           <Icon.heart width="16" height="16" fill={saved ? 'currentColor' : 'none'} />
         </button>
+        {p.preview && <CardPlayButton preview={p.preview} title={p.title} />}
         <div className="quick">
           <button type="button" className="quick-btn" onClick={() => nav(`/product/${p.id}`)}>
             <Icon.eye /> Quick preview

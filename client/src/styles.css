@@ -177,7 +177,8 @@ main { flex: 1; }
   border-radius: var(--radius); overflow: hidden; transition: transform .25s ease, box-shadow .25s ease; min-width: 0;
 }
 .card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -18px rgb(0 0 0 / .35); }
-.card-media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; }
+/* Product images are 3:4 portrait (720x960); covers carry text top and bottom, so show them whole. */
+.card-media { position: relative; aspect-ratio: 3 / 4; overflow: hidden; }
 .card-media > a { display: block; height: 100%; }
 .badge {
   position: absolute; top: 10px; left: 10px; padding: 5px 10px; border-radius: 999px; font: 600 11px/1 var(--ui);
@@ -253,10 +254,10 @@ main { flex: 1; }
 /* ---------- Product detail ---------- */
 .back-link { background: none; border: 0; padding: 0; font: 500 13.5px var(--ui); color: var(--text-dim); margin-bottom: 20px; }
 .pdp { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 48px; }
-.pdp-gallery { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.pdp-main { border-radius: 18px; overflow: hidden; aspect-ratio: 4 / 3; }
+.pdp-gallery { display: flex; flex-direction: column; gap: 12px; min-width: 0; width: 100%; max-width: 560px; justify-self: center; }
+.pdp-main { border-radius: 18px; overflow: hidden; aspect-ratio: 3 / 4; }
 .pdp-thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.thumb { padding: 0; border: 0; border-radius: 10px; overflow: hidden; aspect-ratio: 1; outline: 2px solid transparent; outline-offset: 0; background: none; }
+.thumb { padding: 0; border: 0; border-radius: 10px; overflow: hidden; aspect-ratio: 3 / 4; outline: 2px solid transparent; outline-offset: 0; background: none; }
 .thumb.on { outline-color: var(--accent); }
 .pdp-info { display: flex; flex-direction: column; gap: 16px; }
 .pdp-title { font: 600 30px/1.2 var(--display); }
@@ -431,3 +432,60 @@ main { flex: 1; }
 .seo-fallback { padding-top: 48px; color: var(--text-dim); }
 .seo-fallback h1 { color: var(--text); font: 600 32px/1.2 var(--display, inherit); margin: 0 0 12px; }
 .seo-fallback a { color: var(--text); }
+
+/* ---------- Audio previews ---------- */
+.card-play {
+  position: absolute; right: 12px; bottom: 12px; z-index: 3; width: 44px; height: 44px; border-radius: 50%; border: 0;
+  display: flex; align-items: center; justify-content: center; background: var(--accent); color: var(--accent-text);
+  box-shadow: 0 8px 20px -6px rgb(0 0 0 / .5); transition: transform .15s ease;
+}
+.card-play:hover { transform: scale(1.06); }
+.card-play svg { margin-left: 2px; }
+.card-play.on svg { margin-left: 0; }
+.card-progress { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); z-index: 3; transition: width .25s linear; }
+.audio-player { min-width: 0;
+  display: flex; gap: 14px; align-items: center; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface);
+}
+.audio-play {
+  flex: none; width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-text);
+  display: flex; align-items: center; justify-content: center;
+}
+.audio-main { flex: 1; min-width: 0; }
+.audio-head { display: flex; justify-content: space-between; font: 500 13px var(--ui); margin-bottom: 8px; }
+.audio-wave { display: flex; align-items: center; gap: 1px; height: 44px; cursor: pointer; min-width: 0; overflow: hidden; }
+.audio-wave span { flex: 1 1 0; min-width: 0; border-radius: 2px; background: var(--border); transition: background .15s; }
+.audio-wave span.on { background: var(--accent); }
+.audio-wave:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+
+/* ---------- Before / after slider ---------- */
+.compare { position: relative; width: 100%; height: 100%; overflow: hidden; cursor: ew-resize; touch-action: pan-y; user-select: none; background: var(--surface-alt); }
+.compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.compare-before { position: absolute; inset: 0; }
+.compare-tag { position: absolute; top: 14px; padding: 6px 12px; border-radius: 999px; font: 600 12px var(--ui); letter-spacing: .06em; text-transform: uppercase; background: rgb(0 0 0 / .55); color: #fff; pointer-events: none; }
+.compare-tag.left { left: 14px; }
+.compare-tag.right { right: 14px; }
+.compare-handle { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: #fff; box-shadow: 0 0 12px rgb(0 0 0 / .35); }
+.compare-handle:focus-visible { outline: none; }
+.compare-handle:focus-visible .compare-knob { outline: 3px solid var(--accent); outline-offset: 2px; }
+.compare-knob {
+  position: absolute; top: 50%; left: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: #fff; color: #111;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgb(0 0 0 / .35);
+}
+.pdp-main-note { font-size: 13px; text-align: center; }
+
+/* ---------- 3D viewer ---------- */
+.viewer3d { position: relative; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.viewer3d:active { cursor: grabbing; }
+.viewer3d-canvas { display: block; width: 100% !important; height: 100% !important; }
+.viewer3d-hint {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; pointer-events: none;
+  background: rgb(0 0 0 / .5); color: #fff; font: 500 12px var(--ui); white-space: nowrap;
+}
+.viewer3d-bar {
+  position: absolute; left: 14px; right: 14px; bottom: 14px; display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+  border-radius: 999px; background: rgb(0 0 0 / .5); backdrop-filter: blur(8px); color: #fff; cursor: default;
+}
+.viewer3d-bar input[type=range] { flex: 1; accent-color: #fff; min-width: 0; }
+.viewer3d-auto { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgb(255 255 255 / .15); color: #fff; display: flex; align-items: center; justify-content: center; }
+.viewer3d-auto.on { background: #fff; color: #111; }
+.viewer3d-deg { flex: none; width: 44px; text-align: right; font: 500 12px var(--ui); font-variant-numeric: tabular-nums; }

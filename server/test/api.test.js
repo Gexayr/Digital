@@ -2,6 +2,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { openDb } from '../src/db.js';
 import { createApp } from '../src/app.js';
+import { PRODUCTS } from '../src/seed.js';
 
 let server, base;
 before(async () => {
@@ -17,7 +18,7 @@ const json = (path, opts = {}) => fetch(base + path, {
 
 test('lists and filters products', async () => {
   const all = await json('/products');
-  assert.equal(all.body.length, 12);
+  assert.equal(all.body.length, PRODUCTS.length);
   const fonts = await json('/products?category=Fonts');
   assert.ok(fonts.body.every((p) => p.category === 'Fonts'));
   const cheap = await json('/products?maxPrice=20&sort=PriceLow');
@@ -30,7 +31,8 @@ test('lists and filters products', async () => {
 
 test('newest sort uses real dates', async () => {
   const { body } = await json('/products?sort=Newest');
-  assert.equal(body[0].id, 'p12'); // 2026-07-28
+  const newest = [...PRODUCTS].sort((a, b) => b.updated.localeCompare(a.updated))[0];
+  assert.equal(body[0].id, newest.id);
 });
 
 test('home sections have no duplicates and are full', async () => {
@@ -42,7 +44,7 @@ test('home sections have no duplicates and are full', async () => {
 });
 
 test('product detail always has related items', async () => {
-  const { body } = await json('/products/p7'); // only product in 3D Assets
+  const { body } = await json('/products/p7');
   assert.equal(body.related.length, 4);
   assert.ok(!body.related.some((p) => p.id === 'p7'));
   assert.equal((await json('/products/nope')).status, 404);
@@ -79,4 +81,25 @@ test('newsletter and coupons validate input', async () => {
   assert.equal((await json('/newsletter', { method: 'POST', body: '{"email":"a@b.co"}' })).status, 200);
   assert.equal((await json('/coupons/validate', { method: 'POST', body: '{"code":"FAKE"}' })).status, 404);
   assert.equal((await json('/coupons/validate', { method: 'POST', body: '{"code":"creator20"}' })).body.percent, 20);
+});
+
+test('every category has at least 5 products', async () => {
+  const cats = await json('/categories');
+  for (const c of cats.body) assert.ok(c.count >= 5, `${c.name}: ${c.count}`);
+});
+
+test('re-opening an existing database adds new seed products once', async () => {
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const path = (await import('node:path')).default;
+  const file = path.join(mkdtempSync(path.join(tmpdir(), 'vellum-db-')), 'v.db');
+  const db1 = openDb(file);
+  db1.exec("DELETE FROM products WHERE id = 'p40'; UPDATE products SET category = 'Digital Art' WHERE id = 'p6'");
+  const before = db1.prepare('SELECT COUNT(*) AS n FROM reviews').get().n;
+  db1.close();
+  const db2 = openDb(file);
+  assert.equal(db2.prepare('SELECT COUNT(*) AS n FROM products').get().n, PRODUCTS.length);
+  assert.equal(db2.prepare("SELECT category FROM products WHERE id = 'p6'").get().category, 'Photography');
+  assert.equal(db2.prepare('SELECT COUNT(*) AS n FROM reviews').get().n, before + 2);
+  db2.close();
 });

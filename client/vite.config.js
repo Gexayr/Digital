@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // three.js (3D viewer) is its own lazy chunk, loaded only on 3D product pages.
+  build: { chunkSizeWarningLimit: 700 },
   server: {
     port: 5173,
     proxy: { '/api': 'http://localhost:3000' },

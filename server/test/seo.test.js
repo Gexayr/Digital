@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { openDb } from '../src/db.js';
 import { createApp } from '../src/app.js';
+import { PRODUCTS } from '../src/seed.js';
 
 let server, base;
 before(async () => {
@@ -55,7 +56,7 @@ test('robots.txt and sitemap.xml', async () => {
   assert.match(robots.text, /Disallow: \/api\//);
   const sm = await get('/sitemap.xml');
   assert.equal(sm.headers.get('content-type').split(';')[0], 'application/xml');
-  assert.equal((sm.text.match(/<url>/g) || []).length, 1 + 1 + 8 + 2 + 12);
+  assert.equal((sm.text.match(/<url>/g) || []).length, 1 + 1 + 8 + 2 + PRODUCTS.length);
 });
 
 test('user text is escaped in injected HTML', async () => {

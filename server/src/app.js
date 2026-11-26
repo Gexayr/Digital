@@ -3,9 +3,9 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { rowToProduct } from './db.js';
+import { rowToProduct as baseRow } from './db.js';
 import { CATEGORIES } from './seed.js';
 import { createSeo } from './seo.js';
 
@@ -23,6 +23,36 @@ const round2 = (n) => Math.round(n * 100) / 100;
 const str = (v, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
 export function createApp({ db, clientDist, filesDir, siteUrl }) {
+  // Media extras that live next to the built client:
+  //   previews/<id>.mp3 (+ <id>.peaks.json)  -> audio preview with waveform
+  //   compare/<id>-<n>-before.jpg / -after.jpg -> before/after pairs for presets
+  const media = { previews: new Map(), compare: new Map() };
+  const dir = (d) => { try { return readdirSync(path.join(clientDist, d)); } catch { return []; } };
+  if (clientDist) {
+    for (const f of dir('previews')) {
+      const m = f.match(/^(\w+)\.mp3$/);
+      if (!m) continue;
+      let peaks = [];
+      try { peaks = JSON.parse(readFileSync(path.join(clientDist, 'previews', `${m[1]}.peaks.json`), 'utf8')); } catch { /* optional */ }
+      media.previews.set(m[1], { url: `/previews/${f}`, peaks });
+    }
+    const files = new Set(dir('compare'));
+    for (const f of files) {
+      const m = f.match(/^(\w+)-(\d+)-before\.jpg$/);
+      if (!m || !files.has(`${m[1]}-${m[2]}-after.jpg`)) continue;
+      const list = media.compare.get(m[1]) || [];
+      list[Number(m[2])] = { before: `/compare/${f}`, after: `/compare/${m[1]}-${m[2]}-after.jpg` };
+      media.compare.set(m[1], list);
+    }
+  }
+  const rowToProduct = (r) => {
+    const p = baseRow(r);
+    if (!p) return p;
+    const preview = media.previews.get(p.id);
+    const compare = media.compare.get(p.id)?.filter(Boolean);
+    return { ...p, ...(preview ? { preview } : {}), ...(compare?.length ? { compare } : {}) };
+  };
+
   const app = express();
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
@@ -35,6 +65,8 @@ export function createApp({ db, clientDist, filesDir, siteUrl }) {
         fontSrc: ["'self'", 'data:'],
         scriptSrc: ["'self'"],
         connectSrc: ["'self'"],
+        mediaSrc: ["'self'"],
+        workerSrc: ["'self'", 'blob:'],
         upgradeInsecureRequests: null,
       },
     },

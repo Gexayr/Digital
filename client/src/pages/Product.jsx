@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, fmtDate, fmtPrice, priceOf } from '../api.js';
 import { useStore } from '../store.jsx';
 import { ProductGrid } from '../components/ProductCard.jsx';
 import { ErrorMsg, Icon, Img, Loading, Stars, useFetch, usePageMeta } from '../components/ui.jsx';
+import { AudioPlayer, CompareSlider, useStopAudioOnUnmount } from '../components/media.jsx';
+import { HAS_3D } from '../viewer3d/ids.js';
+
+const Viewer3D = lazy(() => import('../viewer3d/Viewer3D.jsx'));
 
 const TABS = [['description', 'Description'], ['features', 'Features'], ['files', 'File Info'], ['reviews', 'Reviews']];
 
@@ -15,6 +19,7 @@ export default function Product() {
   const [gallery, setGallery] = useState(0);
   const [tab, setTab] = useState('description');
   useEffect(() => { setGallery(0); setTab('description'); }, [id]);
+  useStopAudioOnUnmount();
   usePageMeta(
     p ? `${p.title} by ${p.creator} | Vellum` : error ? 'Product not found | Vellum' : null,
     p ? `${p.title} by ${p.creator}. ${p.category} for ${p.software}: ${p.format}, ${p.size}, ${p.license} license. Instant download on Vellum.` : undefined,
@@ -37,6 +42,16 @@ export default function Product() {
       else { await navigator.clipboard.writeText(url); notify('Link copied'); }
     } catch { /* user cancelled */ }
   };
+  const still = <Img name={imgs[gallery]} alt={`${p.title} - preview ${gallery + 1}`} eager />;
+  let main = still;
+  let mainNote = null;
+  if (p.compare?.[gallery]) {
+    main = <CompareSlider before={p.compare[gallery].before} after={p.compare[gallery].after} alt={p.title} />;
+    mainNote = 'Drag the slider to compare the original photo with the preset applied.';
+  } else if (HAS_3D.has(p.id)) {
+    main = <Suspense fallback={still}><Viewer3D id={p.id} variant={gallery} fallback={still} /></Suspense>;
+    mainNote = 'Live 3D preview: drag to rotate, scroll to zoom. Thumbnails switch scene variants.';
+  }
   const avg = p.reviews.length ? (p.reviews.reduce((s, r) => s + r.stars, 0) / p.reviews.length).toFixed(1) : null;
 
   return (
@@ -44,11 +59,12 @@ export default function Product() {
       <button type="button" className="back-link" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/shop'))}>← Back</button>
       <div className="pdp">
         <div className="pdp-gallery">
-          <div className="pdp-main"><Img name={imgs[gallery]} alt={`${p.title} - preview ${gallery + 1}`} eager /></div>
+          <div className="pdp-main">{main}</div>
+          {mainNote && <div className="pdp-main-note muted">{mainNote}</div>}
           <div className="pdp-thumbs">
             {imgs.map((name, i) => (
               <button type="button" key={name} className={'thumb' + (gallery === i ? ' on' : '')} onClick={() => setGallery(i)} aria-label={`Show preview ${i + 1}`}>
-                <Img name={name} alt="" />
+                {p.compare?.[i] ? <img className="img" src={p.compare[i].after} alt="" loading="lazy" /> : <Img name={name} alt="" />}
               </button>
             ))}
           </div>
@@ -65,6 +81,7 @@ export default function Product() {
             <span className="price-now">{fmtPrice(priceOf(p))}</span>
             {p.sale != null && <span className="price-was">{fmtPrice(p.price)}</span>}
           </div>
+          {p.preview && <AudioPlayer preview={p.preview} title={p.title} />}
           <p className="muted">Instant digital delivery after purchase. Includes lifetime updates on this version line and a {p.license} license.</p>
           <div className="pdp-ctas">
             <button type="button" className="btn btn-primary btn-lg" onClick={() => { if (!inCart(p.id)) addToCart(p); nav('/checkout'); }}>Buy Now</button>

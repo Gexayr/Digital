@@ -68,13 +68,16 @@ export function openDb(file) {
     );
   `);
 
-  const count = db.prepare('SELECT COUNT(*) AS n FROM products').get().n;
-  if (count === 0) seed(db);
+  // Idempotent: a fresh DB gets the whole catalogue, an existing one gets
+  // only the products added to seed.js since it was created.
+  seed(db);
+  // p6 is a photo set; it was listed under Digital Art originally.
+  db.prepare("UPDATE products SET category = 'Photography' WHERE id = 'p6' AND category = 'Digital Art'").run();
   return db;
 }
 
 function seed(db) {
-  const insP = db.prepare(`INSERT INTO products
+  const insP = db.prepare(`INSERT OR IGNORE INTO products
     (id,title,category,creator,price,sale,rating,sales,badge,tags,img,format,size,license,software,updated)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
   const insR = db.prepare('INSERT INTO reviews (product_id,name,stars,text) VALUES (?,?,?,?)');
@@ -82,9 +85,9 @@ function seed(db) {
   db.exec('BEGIN');
   try {
     for (const p of PRODUCTS) {
-      insP.run(p.id, p.title, p.category, p.creator, p.price, p.sale, p.rating, p.sales, p.badge,
+      const { changes } = insP.run(p.id, p.title, p.category, p.creator, p.price, p.sale, p.rating, p.sales, p.badge,
         JSON.stringify(p.tags), p.img, p.format, p.size, p.license, p.software, p.updated);
-      for (const r of REVIEWS) insR.run(p.id, r.name, r.stars, r.text);
+      if (changes) for (const r of REVIEWS) insR.run(p.id, r.name, r.stars, r.text);
     }
     for (const c of COUPONS) insC.run(c.code, c.percent);
     db.exec('COMMIT');
