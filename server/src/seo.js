@@ -9,7 +9,8 @@ import { CATEGORIES } from './seed.js';
 const SITE = 'Vellum';
 const TAGLINE = 'Digital Marketplace';
 const DEFAULT_DESC = 'Vellum is a marketplace for presets, UI kits, fonts, 3D assets, templates and audio from independent creators. Every file reviewed, every creator paid directly.';
-const NOINDEX = new Set(['/cart', '/checkout', '/wishlist', '/downloads']);
+const NOINDEX = new Set(['/cart', '/checkout', '/wishlist', '/downloads', '/login', '/register', '/forgot', '/reset', '/verify', '/account']);
+const PRIVATE_PREFIX = /^\/(order|studio|admin)(\/|$)/;
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 // JSON inside <script> must not be able to close the tag.
@@ -18,15 +19,16 @@ const priceOf = (p) => p.sale ?? p.price;
 const clip = (s, n = 160) => (s.length <= n ? s : s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…');
 
 export function productDescription(p) {
+  if (p.description) return clip(`${p.title} by ${p.creator}. ${p.description.replace(/\s+/g, ' ')}`);
   return clip(`${p.title} by ${p.creator}. ${p.category} for ${p.software}: ${p.format}, ${p.size}, ${p.license} license. Rated ${p.rating}/5 by ${p.sales.toLocaleString('en-US')} buyers. Instant download on Vellum.`);
 }
 
 export function createSeo({ db, indexFile, siteUrl }) {
   const template = readFileSync(indexFile, 'utf8');
   const q = {
-    byId: db.prepare('SELECT * FROM products WHERE id = ?'),
-    all: db.prepare('SELECT * FROM products ORDER BY sales DESC'),
-    byCategory: db.prepare('SELECT * FROM products WHERE category = ? ORDER BY sales DESC'),
+    byId: db.prepare("SELECT * FROM products WHERE id = ? AND status = 'published'"),
+    all: db.prepare("SELECT * FROM products WHERE status = 'published' ORDER BY sales DESC"),
+    byCategory: db.prepare("SELECT * FROM products WHERE category = ? AND status = 'published' ORDER BY sales DESC"),
     reviewCount: db.prepare('SELECT COUNT(*) AS n FROM reviews WHERE product_id = ?'),
   };
   const origin = (req) => siteUrl || `${req.protocol}://${req.get('host')}`;
@@ -108,7 +110,7 @@ export function createSeo({ db, indexFile, siteUrl }) {
       if (!p) return { ...meta, status: 404, title: `Product not found | ${SITE}`, noindex: true, body: '<h1>Product not found</h1>' };
       const url = `${base}/product/${encodeURIComponent(p.id)}`;
       const reviews = q.reviewCount.get(p.id).n;
-      const images = [p.img, `${p.img}-alt-1`, `${p.img}-alt-2`, `${p.img}-alt-3`].map((i) => `${base}/images/${i}.jpg`);
+      const images = (p.images.length ? p.images : [p.img]).map((i) => `${base}/images/${i}.jpg`);
       meta.title = `${p.title} by ${p.creator} | ${SITE}`;
       meta.description = productDescription(p);
       meta.canonical = url;
@@ -134,9 +136,13 @@ export function createSeo({ db, indexFile, siteUrl }) {
       return meta;
     }
 
-    if (NOINDEX.has(path) || path.startsWith('/order/')) {
-      const names = { '/cart': 'Shopping cart', '/checkout': 'Checkout', '/wishlist': 'Wishlist', '/downloads': 'Your downloads' };
-      meta.title = `${names[path] || 'Order'} | ${SITE}`;
+    if (NOINDEX.has(path) || PRIVATE_PREFIX.test(path)) {
+      const names = {
+        '/cart': 'Shopping cart', '/checkout': 'Checkout', '/wishlist': 'Wishlist', '/downloads': 'Your downloads',
+        '/login': 'Sign in', '/register': 'Create an account', '/forgot': 'Reset password', '/reset': 'Reset password', '/verify': 'Confirm your email', '/account': 'Your account',
+      };
+      const section = { order: 'Order', studio: 'Creator studio', admin: 'Admin' }[path.split('/')[1]];
+      meta.title = `${names[path] || section} | ${SITE}`;
       meta.noindex = true;
       return meta;
     }
@@ -187,6 +193,9 @@ export function createSeo({ db, indexFile, siteUrl }) {
       'Disallow: /wishlist',
       'Disallow: /downloads',
       'Disallow: /order/',
+      'Disallow: /account',
+      'Disallow: /studio',
+      'Disallow: /admin',
       'Disallow: /stats/',
       '',
       `Sitemap: ${origin(req)}/sitemap.xml`,

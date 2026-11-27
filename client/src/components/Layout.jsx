@@ -24,10 +24,13 @@ export function Logo() {
 }
 
 function Nav() {
-  const { cart, wishlist, theme, toggleTheme, orders } = useStore();
+  const { cart, wishlist, theme, toggleTheme, orders, user } = useStore();
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   useEffect(() => setOpen(false), [loc.pathname]);
+  // Come back to the same page after signing in.
+  const here = loc.pathname + loc.search;
+  const loginHref = ['/', '/login', '/register', '/forgot', '/reset'].includes(loc.pathname) ? '/login' : `/login?next=${encodeURIComponent(here)}`;
   useEffect(() => {
     document.body.classList.toggle('no-scroll', open);
     const onKey = (e) => e.key === 'Escape' && setOpen(false);
@@ -44,7 +47,7 @@ function Nav() {
         <Link to="/" className="logo" aria-label="Vellum home"><Logo /></Link>
         <nav className="nav-links" aria-label="Main">
           {LINKS.map((l) => <NavLink key={l.to} to={l.to} end={l.end}>{l.label}</NavLink>)}
-          {orders.length > 0 && <NavLink to="/downloads">Downloads</NavLink>}
+          {(orders.length > 0 || user) && <NavLink to="/downloads">Downloads</NavLink>}
         </nav>
         <div className="spacer" />
         <div className="nav-actions">
@@ -59,6 +62,9 @@ function Nav() {
             <Icon.cart width="20" height="20" />
             {cart.length > 0 && <span className="count">{cart.length}</span>}
           </Link>
+          {user
+            ? <Link to="/account" className="icon-btn user-btn" aria-label="Your account" title={user.name}><span className="user-initial">{user.name.slice(0, 1).toUpperCase()}</span></Link>
+            : <Link to={loginHref} className="btn btn-ghost btn-sm signin-btn">Sign in</Link>}
         </div>
       </div>
 
@@ -73,6 +79,9 @@ function Nav() {
           <NavLink to="/wishlist">Wishlist ({wishlist.length})</NavLink>
           <NavLink to="/cart">Cart ({cart.length})</NavLink>
           <NavLink to="/downloads">Downloads</NavLink>
+          {user ? <NavLink to="/account">Account</NavLink> : <NavLink to={loginHref}>Sign in</NavLink>}
+          <NavLink to="/studio">Sell on Vellum</NavLink>
+          {user?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
         </nav>
       </aside>
     </header>
@@ -93,10 +102,11 @@ function Footer() {
         </div>
         <div className="footer-col">
           <h4>Account</h4>
-          <Link to="/cart">Cart</Link><Link to="/wishlist">Wishlist</Link><Link to="/downloads">Downloads</Link>
+          <Link to="/account">Your account</Link><Link to="/cart">Cart</Link><Link to="/wishlist">Wishlist</Link><Link to="/downloads">Downloads</Link>
         </div>
         <div className="footer-col">
-          <h4>Help</h4>
+          <h4>Creators</h4>
+          <Link to="/studio">Sell on Vellum</Link>
           <Link to="/#faq">FAQ</Link>
         </div>
       </div>

@@ -17,7 +17,7 @@ before(async () => {
   mkdirSync(path.join(dist, 'compare'));
   for (const n of [0, 1]) for (const s of ['before', 'after']) writeFileSync(path.join(dist, 'compare', `p13-${n}-${s}.jpg`), 'x');
   writeFileSync(path.join(dist, 'compare', 'p14-0-before.jpg'), 'x'); // incomplete pair
-  const app = createApp({ db: openDb(':memory:'), clientDist: dist, filesDir: '/nonexistent' });
+  const app = createApp({ db: openDb(':memory:'), clientDist: dist });
   await new Promise((r) => { server = app.listen(0, '127.0.0.1', r); });
   base = `http://127.0.0.1:${server.address().port}/api`;
 });

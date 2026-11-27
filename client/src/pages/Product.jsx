@@ -15,14 +15,14 @@ export default function Product() {
   const { id } = useParams();
   const nav = useNavigate();
   const { data: p, error, loading } = useFetch(() => api.product(id), [id]);
-  const { addToCart, inCart, toggleWishlist, isWishlisted, notify } = useStore();
+  const { addToCart, inCart, toggleWishlist, isWishlisted, notify, user } = useStore();
   const [gallery, setGallery] = useState(0);
   const [tab, setTab] = useState('description');
   useEffect(() => { setGallery(0); setTab('description'); }, [id]);
   useStopAudioOnUnmount();
   usePageMeta(
     p ? `${p.title} by ${p.creator} | Vellum` : error ? 'Product not found | Vellum' : null,
-    p ? `${p.title} by ${p.creator}. ${p.category} for ${p.software}: ${p.format}, ${p.size}, ${p.license} license. Instant download on Vellum.` : undefined,
+    p ? (p.description ? `${p.title} by ${p.creator}. ${p.description}`.slice(0, 160) : `${p.title} by ${p.creator}. ${p.category} for ${p.software}: ${p.format}, ${p.size}, ${p.license} license. Instant download on Vellum.`) : undefined,
   );
 
   if (loading) return <Loading />;
@@ -34,7 +34,8 @@ export default function Product() {
     );
   }
 
-  const imgs = [p.img, `${p.img}-alt-1`, `${p.img}-alt-2`, `${p.img}-alt-3`];
+  const imgs = p.images?.length ? p.images : [p.img];
+  const canEdit = user && p.canEdit;
   const share = async () => {
     const url = window.location.href;
     try {
@@ -57,17 +58,21 @@ export default function Product() {
   return (
     <div className="container page">
       <button type="button" className="back-link" onClick={() => (window.history.length > 1 ? nav(-1) : nav('/shop'))}>← Back</button>
+      {p.status && p.status !== 'published' && (
+        <div className="preview-banner">Preview: this product is not in the shop yet ({p.status === 'pending' ? 'waiting for review' : p.status}). <Link to={`/studio/${p.id}`} className="link-accent">Back to editing →</Link></div>
+      )}
+      {p.status === 'published' && canEdit && <div className="preview-banner subtle"><Link to={`/studio/${p.id}`} className="link-accent">Edit this product →</Link></div>}
       <div className="pdp">
         <div className="pdp-gallery">
           <div className="pdp-main">{main}</div>
           {mainNote && <div className="pdp-main-note muted">{mainNote}</div>}
-          <div className="pdp-thumbs">
+          {imgs.length > 1 && <div className="pdp-thumbs">
             {imgs.map((name, i) => (
               <button type="button" key={name} className={'thumb' + (gallery === i ? ' on' : '')} onClick={() => setGallery(i)} aria-label={`Show preview ${i + 1}`}>
                 {p.compare?.[i] ? <img className="img" src={p.compare[i].after} alt="" loading="lazy" /> : <Img name={name} alt="" />}
               </button>
             ))}
-          </div>
+          </div>}
         </div>
 
         <div className="pdp-info">
@@ -75,7 +80,7 @@ export default function Product() {
           <h1 className="pdp-title">{p.title}</h1>
           <div className="muted">by <Link className="strong" to={'/shop?search=' + encodeURIComponent(p.creator)}>{p.creator}</Link></div>
           <div className="pdp-rating muted">
-            <Icon.star className="star-ic" width="14" height="14" /> {p.rating} rating · {p.sales.toLocaleString()} sales
+            {p.rating ? <><Icon.star className="star-ic" width="14" height="14" /> {p.rating} rating · {p.sales.toLocaleString()} sales</> : <>New on Vellum{p.sales ? ` · ${p.sales.toLocaleString()} sales` : ''}</>}
           </div>
           <div className="price pdp-price">
             <span className="price-now">{fmtPrice(priceOf(p))}</span>
@@ -103,14 +108,15 @@ export default function Product() {
       </div>
 
       <div className="tabs" role="tablist">
-        {TABS.map(([key, label]) => (
+        {TABS.filter(([key]) => key !== 'features' || !p.description).map(([key, label]) => (
           <button type="button" role="tab" key={key} aria-selected={tab === key} className={'tab' + (tab === key ? ' on' : '')} onClick={() => setTab(key)}>
             {label}{key === 'reviews' ? ` (${p.reviews.length})` : ''}
           </button>
         ))}
       </div>
       <div className="tab-panel" role="tabpanel">
-        {tab === 'description' && (
+        {tab === 'description' && p.description && <div className="prose">{p.description.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>)}</div>}
+        {tab === 'description' && !p.description && (
           <p>A carefully crafted {p.category} asset built for working creative professionals. Every file is tested across the listed software before release, and updated whenever the underlying tools change. {p.creator} has been publishing on Vellum since 2023.</p>
         )}
         {tab === 'features' && (

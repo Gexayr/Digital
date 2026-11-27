@@ -32,16 +32,23 @@ export function OrderSuccess() {
 
 export function Downloads() {
   usePageMeta('Your downloads | Vellum');
-  const { orders } = useStore();
+  const { orders, user } = useStore();
   const [state, setState] = useState({ loading: true, list: [] });
 
   useEffect(() => {
+    if (user === undefined) return undefined;
     let alive = true;
-    Promise.allSettled(orders.map((o) => api.order(o.id, o.token))).then((res) => {
-      if (alive) setState({ loading: false, list: res.filter((r) => r.status === 'fulfilled').map((r) => r.value) });
+    // Account orders (any device) plus the ones bought on this device as a guest.
+    const fromAccount = user ? api.myOrders().catch(() => []) : Promise.resolve([]);
+    Promise.all([fromAccount, Promise.allSettled(orders.map((o) => api.order(o.id, o.token)))]).then(([mine, res]) => {
+      if (!alive) return;
+      const seen = new Set(mine.map((o) => o.id));
+      const local = res.filter((r) => r.status === 'fulfilled').map((r) => r.value).filter((o) => !seen.has(o.id));
+      const list = [...mine, ...local].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      setState({ loading: false, list });
     });
     return () => { alive = false; };
-  }, [orders]);
+  }, [orders, user]);
 
   return (
     <div className="container page narrow-md">
@@ -49,6 +56,9 @@ export function Downloads() {
       {state.loading && <Loading />}
       {!state.loading && state.list.length === 0 && (
         <div className="state-msg">No purchases yet. <Link to="/shop" className="link-accent">Browse the shop →</Link></div>
+      )}
+      {!state.loading && user === null && (
+        <p className="muted small">Bought on another device? <Link to="/login?next=/downloads" className="link-accent">Sign in</Link> to see every purchase in one place.</p>
       )}
       {state.list.map((o) => (
         <section key={o.id} className="order-block">

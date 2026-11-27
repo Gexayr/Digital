@@ -9,6 +9,9 @@ services:
     environment:
       NODE_ENV: production
       SITE_URL: ${SITE_URL:-}   # e.g. https://vellum.amsoft.am (canonical URLs, sitemap); defaults to the request host
+      SMTP_URL: ${SMTP_URL:-}   # e.g. smtps://resend:<api key>@smtp.resend.com:465; enables email confirmation + password reset
+      MAIL_FROM: ${MAIL_FROM:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}   # OAuth web client id; enables "Sign in with Google"
     volumes:
       - vellum-data:/data   # SQLite DB + deliverable files (/data/files/<productId>.zip)
 

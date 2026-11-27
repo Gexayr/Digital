@@ -35,8 +35,9 @@ export default function ProductCard({ product: p }) {
         <div className="card-meta"><span>{p.category}</span><span>{p.creator}</span></div>
         <h3 className="card-title"><Link to={`/product/${p.id}`}>{p.title}</Link></h3>
         <div className="card-rating">
-          <Icon.star className="star-ic" /> <span>{p.rating}</span><span className="dot">·</span>
-          <span>{(p.sales || 0).toLocaleString()} sales</span>
+          {p.rating ? (
+            <><Icon.star className="star-ic" /> <span>{p.rating}</span><span className="dot">·</span><span>{(p.sales || 0).toLocaleString()} sales</span></>
+          ) : <span>New{p.sales ? ` · ${p.sales.toLocaleString()} sales` : ''}</span>}
         </div>
         <div className="card-foot">
           <div className="price">

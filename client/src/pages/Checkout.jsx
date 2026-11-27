@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, fmtPrice, priceOf } from '../api.js';
 import { useStore } from '../store.jsx';
@@ -24,9 +24,13 @@ function validate(f) {
 
 export default function Checkout() {
   usePageMeta('Checkout | Vellum');
-  const { cart, coupon, clearCart, addOrder } = useStore();
+  const { cart, coupon, clearCart, addOrder, user } = useStore();
   const nav = useNavigate();
-  const [f, setF] = useState({ name: '', email: '', country: 'United States', address: '', payment: 'card', cardNumber: '', expiry: '', cvv: '', terms: false });
+  const [f, setF] = useState({ name: user?.name || '', email: user?.email || '', country: 'United States', address: '', payment: 'card', cardNumber: '', expiry: '', cvv: '', terms: false });
+  // The session check may finish after the first render.
+  useEffect(() => {
+    if (user) setF((s) => ({ ...s, name: s.name || user.name, email: s.email || user.email }));
+  }, [user]);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [serverErr, setServerErr] = useState('');
@@ -76,6 +80,7 @@ export default function Checkout() {
         <div className="stack-lg">
           <fieldset>
             <legend className="h3">Customer information</legend>
+            {user === null && <p className="muted small checkout-signin"><Link to="/login?next=/checkout" className="link-accent">Sign in</Link> to keep this purchase in your account, or continue as a guest.</p>}
             <div className="form-grid">
               {field('name', 'Full name', { wide: true, input: { autoComplete: 'name' } })}
               {field('email', 'Email', { wide: true, input: { type: 'email', autoComplete: 'email', inputMode: 'email' } })}

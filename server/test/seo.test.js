@@ -12,7 +12,7 @@ before(async () => {
   const dist = mkdtempSync(path.join(tmpdir(), 'vellum-dist-'));
   writeFileSync(path.join(dist, 'index.html'),
     '<!doctype html><html><head><meta name="description" content="x" /><title>x</title></head><body><div id="root"></div></body></html>');
-  const app = createApp({ db: openDb(':memory:'), clientDist: dist, filesDir: '/nonexistent', siteUrl: 'https://example.test' });
+  const app = createApp({ db: openDb(':memory:'), clientDist: dist, siteUrl: 'https://example.test' });
   await new Promise((r) => { server = app.listen(0, '127.0.0.1', r); });
   base = `http://127.0.0.1:${server.address().port}`;
 });

@@ -6,7 +6,7 @@ import { PRODUCTS } from '../src/seed.js';
 
 let server, base;
 before(async () => {
-  const app = createApp({ db: openDb(':memory:'), clientDist: null, filesDir: '/nonexistent' });
+  const app = createApp({ db: openDb(':memory:'), clientDist: null });
   await new Promise((r) => { server = app.listen(0, '127.0.0.1', r); });
   base = `http://127.0.0.1:${server.address().port}/api`;
 });

@@ -3,11 +3,17 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { rowToProduct as baseRow } from './db.js';
 import { CATEGORIES } from './seed.js';
 import { createSeo } from './seo.js';
+import { createAuth } from './auth.js';
+import { accountRoutes } from './account.js';
+import { studioRoutes } from './studio.js';
+import { adminRoutes } from './admin.js';
+import { createMailer } from './mail.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PAYMENTS = ['card', 'paypal', 'applepay', 'googlepay'];
@@ -22,7 +28,9 @@ const SORTS = {
 const round2 = (n) => Math.round(n * 100) / 100;
 const str = (v, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
-export function createApp({ db, clientDist, filesDir, siteUrl }) {
+export function createApp({ db, clientDist, filesDir, dataDir, siteUrl, mailer = createMailer(), googleClientId = '', verifyGoogle }) {
+  dataDir ||= mkdtempSync(path.join(tmpdir(), 'vellum-')); // tests
+  filesDir ||= path.join(dataDir, 'files');
   // Media extras that live next to the built client:
   //   previews/<id>.mp3 (+ <id>.peaks.json)  -> audio preview with waveform
   //   compare/<id>-<n>-before.jpg / -after.jpg -> before/after pairs for presets
@@ -61,32 +69,51 @@ export function createApp({ db, clientDist, filesDir, siteUrl }) {
       directives: {
         defaultSrc: ["'self'"],
         imgSrc: ["'self'", 'data:', 'https:'],
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style'],
         fontSrc: ["'self'", 'data:'],
-        scriptSrc: ["'self'"],
-        connectSrc: ["'self'"],
+        scriptSrc: ["'self'", 'https://accounts.google.com/gsi/client'],
+        connectSrc: ["'self'", 'https://accounts.google.com/gsi/'],
+        frameSrc: ['https://accounts.google.com/gsi/'],
         mediaSrc: ["'self'"],
         workerSrc: ["'self'", 'blob:'],
         upgradeInsecureRequests: null,
       },
     },
+    // Google sign-in opens a popup that must be able to post back to this window.
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   }));
   app.use(compression());
   app.use(express.json({ limit: '50kb' }));
 
+  const auth = createAuth(db);
+  app.use(auth.middleware);
+  // CSRF guard: on top of SameSite=Lax cookies, browsers must not post to the API from other sites.
+  app.use('/api', (req, res, next) => {
+    if (req.method === 'GET' || req.method === 'HEAD') return next();
+    const from = req.get('origin');
+    if (from) {
+      let host = null;
+      try { host = new URL(from).host; } catch { /* malformed */ }
+      if (host !== req.get('host')) return res.status(403).json({ error: 'Cross-site request blocked.' });
+    }
+    next();
+  });
+
   const writeLimiter = rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false });
 
   const q = {
-    all: db.prepare('SELECT * FROM products'),
-    byId: db.prepare('SELECT * FROM products WHERE id = ?'),
+    all: db.prepare("SELECT * FROM products WHERE status = 'published'"),
+    byId: db.prepare("SELECT * FROM products WHERE id = ? AND status = 'published'"),
+    byIdAny: db.prepare('SELECT * FROM products WHERE id = ?'),
     reviews: db.prepare('SELECT name, stars, text, created_at FROM reviews WHERE product_id = ? ORDER BY id DESC'),
     coupon: db.prepare('SELECT code, percent FROM coupons WHERE code = ? COLLATE NOCASE'),
-    insOrder: db.prepare(`INSERT INTO orders (id,token,name,email,country,address,payment,coupon,subtotal,discount,total)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?)`),
+    insOrder: db.prepare(`INSERT INTO orders (id,token,name,email,country,address,payment,coupon,subtotal,discount,total,user_id)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`),
     insItem: db.prepare('INSERT INTO order_items (order_id, product_id, price) VALUES (?,?,?)'),
     bumpSales: db.prepare('UPDATE products SET sales = sales + 1 WHERE id = ?'),
     order: db.prepare('SELECT * FROM orders WHERE id = ?'),
     orderItems: db.prepare(`SELECT p.*, oi.price AS paid FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE oi.order_id = ?`),
+    orderItemRows: db.prepare(`SELECT p.* FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE oi.order_id = ? AND p.id = ?`),
     subscribe: db.prepare('INSERT OR IGNORE INTO subscribers (email) VALUES (?)'),
   };
 
@@ -95,13 +122,13 @@ export function createApp({ db, clientDist, filesDir, siteUrl }) {
   api.get('/health', (_req, res) => res.json({ ok: true }));
 
   api.get('/categories', (_req, res) => {
-    const rows = db.prepare('SELECT category, COUNT(*) AS count FROM products GROUP BY category').all();
+    const rows = db.prepare("SELECT category, COUNT(*) AS count FROM products WHERE status = 'published' GROUP BY category").all();
     const counts = Object.fromEntries(rows.map((r) => [r.category, r.count]));
     res.json(CATEGORIES.map((name) => ({ name, count: counts[name] || 0 })));
   });
 
   api.get('/products', (req, res) => {
-    const where = [];
+    const where = ["status = 'published'"];
     const params = [];
     const { category, search, badge } = req.query;
     if (category && category !== 'All') { where.push('category = ?'); params.push(String(category)); }
@@ -114,20 +141,23 @@ export function createApp({ db, clientDist, filesDir, siteUrl }) {
     if (Number.isFinite(maxPrice) && maxPrice > 0) { where.push('COALESCE(sale, price) <= ?'); params.push(maxPrice); }
     const order = SORTS[req.query.sort] || SORTS.Featured;
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 100);
-    const sql = `SELECT * FROM products ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY ${order}, id LIMIT ${limit}`;
+    const sql = `SELECT * FROM products WHERE ${where.join(' AND ')} ORDER BY ${order}, id LIMIT ${limit}`;
     res.json(db.prepare(sql).all(...params).map(rowToProduct));
   });
 
   api.get('/products/:id', (req, res) => {
-    const p = rowToProduct(q.byId.get(req.params.id));
+    // Owners and admins can preview products that are not live yet.
+    const row = q.byIdAny.get(req.params.id);
+    const canPreview = row && req.user && (req.user.role === 'admin' || row.owner_id === req.user.id);
+    const p = row && (row.status === 'published' || canPreview) ? rowToProduct(row) : null;
     if (!p) return res.status(404).json({ error: 'Product not found' });
     // Same category first, then fill with best sellers so the section is never empty.
-    let related = db.prepare('SELECT * FROM products WHERE category = ? AND id != ? ORDER BY sales DESC LIMIT 4').all(p.category, p.id);
+    let related = db.prepare("SELECT * FROM products WHERE category = ? AND id != ? AND status = 'published' ORDER BY sales DESC LIMIT 4").all(p.category, p.id);
     if (related.length < 4) {
       const skip = new Set([p.id, ...related.map((r) => r.id)]);
       related = related.concat(q.all.all().filter((r) => !skip.has(r.id)).sort((a, b) => b.sales - a.sales).slice(0, 4 - related.length));
     }
-    res.json({ ...p, reviews: q.reviews.all(p.id), related: related.map(rowToProduct) });
+    res.json({ ...p, canEdit: !!canPreview, reviews: q.reviews.all(p.id), related: related.map(rowToProduct) });
   });
 
   function creatorsOf(all) {
@@ -176,8 +206,8 @@ export function createApp({ db, clientDist, filesDir, siteUrl }) {
   api.post('/orders', writeLimiter, (req, res) => {
     const b = req.body || {};
     const ids = Array.isArray(b.items) ? [...new Set(b.items.map(String))].slice(0, 50) : [];
-    const name = str(b.customer?.name);
-    const email = str(b.customer?.email, 254).toLowerCase();
+    const name = str(b.customer?.name) || (req.user ? req.user.name : '');
+    const email = (str(b.customer?.email, 254) || (req.user ? req.user.email : '')).toLowerCase();
     const country = str(b.customer?.country, 80);
     const address = str(b.customer?.address, 300);
     const payment = PAYMENTS.includes(b.payment) ? b.payment : null;
@@ -206,7 +236,7 @@ export function createApp({ db, clientDist, filesDir, siteUrl }) {
 
     db.exec('BEGIN');
     try {
-      q.insOrder.run(id, token, name, email, country, address, payment, coupon?.code ?? null, subtotal, discount, total);
+      q.insOrder.run(id, token, name, email, country, address, payment, coupon?.code ?? null, subtotal, discount, total, req.user?.id ?? null);
       for (const p of products) { q.insItem.run(id, p.id, p.sale ?? p.price); q.bumpSales.run(p.id); }
       db.exec('COMMIT');
     } catch (e) {
@@ -231,18 +261,25 @@ export function createApp({ db, clientDist, filesDir, siteUrl }) {
     };
   }
 
+  // Signed-in owners of an order do not need the token.
+  const canSee = (req, o, token) => !!o && ((req.user && o.user_id === req.user.id) || tokenOk(o, token));
+
   api.get('/orders/:id', (req, res) => {
     const o = q.order.get(req.params.id);
-    if (!tokenOk(o, req.get('x-order-token') || req.query.token)) return res.status(404).json({ error: 'Order not found' });
+    if (!canSee(req, o, req.get('x-order-token') || req.query.token)) return res.status(404).json({ error: 'Order not found' });
     res.json(loadOrder(o.id));
   });
 
   api.get('/orders/:id/download/:productId', (req, res) => {
     const o = q.order.get(req.params.id);
-    if (!tokenOk(o, req.query.token)) return res.status(404).json({ error: 'Order not found' });
-    const item = q.orderItems.all(o.id).find((i) => i.id === req.params.productId);
+    if (!canSee(req, o, req.query.token)) return res.status(404).json({ error: 'Order not found' });
+    const item = q.orderItemRows.get(o.id, req.params.productId);
     if (!item) return res.status(404).json({ error: 'Item not in this order' });
-    // Real deliverables: drop a file at <FILES_DIR>/<productId>.zip and it is served instead.
+    // Files uploaded by the creator in the studio.
+    if (item.file_key) {
+      return res.download(path.join(filesDir, item.file_key), item.file_name, { headers: { 'Content-Type': 'application/octet-stream' } });
+    }
+    // Seed catalogue: drop a file at <FILES_DIR>/<productId>.zip and it is served instead of the placeholder.
     const file = path.join(filesDir, `${item.id}.zip`);
     if (existsSync(file)) return res.download(file, `${item.title.replace(/[^\w\- ]+/g, '').trim()}.zip`);
     res.attachment(`${item.id}-README.txt`).type('text/plain').send(
@@ -250,8 +287,15 @@ export function createApp({ db, clientDist, filesDir, siteUrl }) {
       `This is a placeholder deliverable. Upload the real file to the server's files directory as ${item.id}.zip.\n`);
   });
 
+  api.use(accountRoutes({ db, auth, mailer, siteUrl, loadOrder, googleClientId, verifyGoogle }));
+  const studio = studioRoutes({ db, dataDir, filesDir, requireVerified: mailer.enabled });
+  api.use('/studio', studio.router);
+  api.use('/admin', adminRoutes({ db, auth, siteUrl }));
+
   api.use((_req, res) => res.status(404).json({ error: 'Not found' }));
   app.use('/api', api);
+  // Images uploaded by creators (random names, so they can be cached forever).
+  app.use('/images/u', express.static(studio.uploadsDir, { immutable: true, maxAge: '1y', index: false }), (_req, res) => res.status(404).end());
 
   if (clientDist && existsSync(clientDist)) {
     const seo = createSeo({ db, indexFile: path.join(clientDist, 'index.html'), siteUrl });

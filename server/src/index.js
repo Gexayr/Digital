@@ -2,6 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from './db.js';
 import { createApp } from './app.js';
+import { createMailer } from './mail.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PORT = Number(process.env.PORT) || 3000;
@@ -12,7 +13,8 @@ const FILES_DIR = path.resolve(process.env.FILES_DIR || path.join(DATA_DIR, 'fil
 
 const db = openDb(path.join(DATA_DIR, 'vellum.db'));
 const SITE_URL = (process.env.SITE_URL || '').replace(/\/+$/, '');
-const app = createApp({ db, clientDist: CLIENT_DIST, filesDir: FILES_DIR, siteUrl: SITE_URL });
+const mailer = createMailer({ url: process.env.SMTP_URL, from: process.env.MAIL_FROM });
+const app = createApp({ db, clientDist: CLIENT_DIST, filesDir: FILES_DIR, dataDir: DATA_DIR, siteUrl: SITE_URL, mailer, googleClientId: (process.env.GOOGLE_CLIENT_ID || '').trim() });
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`Vellum listening on http://${HOST}:${PORT}`);
